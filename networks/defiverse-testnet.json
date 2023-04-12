@@ -1,0 +1,47 @@
+{
+    "contracts": {
+        "DFProxyAdmin": "0xeF7828EF2E34a07173cfCa669b98d09cd1d29809",
+        "Multicall2": "0xDD99819dDB53fFcc9FF77d8Cda4553b17D27b9a4",
+        "MockOAS": {
+            "proxy": "0xABD79d01da7Db35f53c4F495FE0684618C8535A6",
+            "impl": "0x0a265724aF058C70e763dBB9F22A902326b453b9"
+        },
+        "wDFV": {
+            "proxy": "0xEf67932B5DF15301B2dcCfd9120f7eC1B598561F",
+            "impl": "0xddBFF32bB1e68eccf251B22FaEAF6F70CBEb5421"
+        },
+        "veDFV": {
+            "proxy": "0x3A3BfA1E95857aea70DE3D0CDAAa81044C880B21",
+            "impl": "0xeb443580CB972AeCDef768312e21B322A17A2E54"
+        },
+        "GPT4veDFV": {
+            "proxy": "0x030Bfd99b10c82Ff61A7dd5835Ab7EC75d88b820",
+            "impl": "0x193049265B75aa4Bb0837d8af87E0e6b9952759D"
+        }
+    },
+    "mapping": {},
+    "roles": {
+        "wDFV": {
+            "MINTER_ROLE": []
+        },
+        "veDFV": {
+            "MINTER_ROLE": [
+                "address:GPT4veDFV"
+            ],
+            "BURNER_ROLE": [
+                "address:GPT4veDFV"
+            ],
+            "TRANSFER_ROLE": [
+                "address:GPT4veDFV"
+            ]
+        },
+        "GPT4veDFV": {
+            "OPERATOR_ROLE": []
+        }
+    },
+    "config": {
+        "lockPeriodPerReward": "365",
+        "minLockPeriod": "7",
+        "gpt.address": "0xeded8858e4756b147a9115c593bc0146847d3af2"
+    }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "defiverse-smart-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "develop": "truffle develop",
+    "compile": "truffle compile && node scripts/exportAbi.js",
+    "deploy": "truffle migrate --network defiverse-testnet --reset --f 1 --to 1",
+    "deploy:defiverse:testnet": "truffle migrate --network defiverse-testnet --reset --f 1 --to 1",
+    "deploy:goerli:testnet": "truffle migrate --network goerli-testnet --reset --f 1 --to 1",
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "hungvu",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-etherscan": "^3.1.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "ethereum-waffle": "^3.4.4",
+    "ethereumjs-abi": "^0.6.8",
+    "ethers": "^5.6.7",
+    "hardhat-gas-reporter": "^1.0.9",
+    "inquirer": "^8.2.4",
+    "lite-server": "^2.6.1",
+    "prettier": "^2.6.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.13",
+    "solhint": "^3.3.7",
+    "solidity-coverage": "^0.7.0"
+  },
+  "dependencies": {
+    "@evmchain/contract-deployer": "^1.3.5",
+    "@chainlink/contracts": "^0.4.0",
+    "@nomiclabs/hardhat-truffle5": "^2.0.5",
+    "@openzeppelin/contracts": "^4.2.0",
+    "@openzeppelin/contracts-upgradeable": "^4.1.0",
+    "@truffle/hdwallet-provider": "^2.1.2",
+    "dotenv": "^8.2.0",
+    "hardhat": "^2.9.3",
+    "truffle": "^5.6.8",
+    "truffle-flattener": "^1.5.0",
+    "web3": "^1.7.3"
+  }
+}
