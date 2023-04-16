@@ -25,4 +25,4 @@ const exportAbis = function (contracts, subfolder, outputAbiFolder = "./abi") {
   );
 };
 
-exportAbis(["Multicall2", "wDFV", "veDFV", "GPT4veDFV"], ".");
+exportAbis(["Multicall2", "wDFV", "VotingEscrow"], ".");

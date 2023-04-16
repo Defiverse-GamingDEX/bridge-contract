@@ -3,15 +3,15 @@ pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "./interface/IWDFV.sol";
+import "./interface/IDFV.sol";
 
-contract wDFV is IWDFV, AccessControlEnumerableUpgradeable, ERC20Upgradeable {
+contract wDFV is IDFV, AccessControlEnumerableUpgradeable, ERC20Upgradeable {
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
   modifier onlyAdmin() {
     require(
       hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-      "wDFV: caller is not admin"
+      "DFV: caller is not admin"
     );
     _;
   }
@@ -30,7 +30,7 @@ contract wDFV is IWDFV, AccessControlEnumerableUpgradeable, ERC20Upgradeable {
   function mint(address to, uint256 amount) public {
     require(
       hasRole(MINTER_ROLE, _msgSender()),
-      "veDFV: must have minter role to mint"
+      "DFV: must have minter role to mint"
     );
     _mint(to, amount);
   }

@@ -10,38 +10,18 @@
             "proxy": "0xEf67932B5DF15301B2dcCfd9120f7eC1B598561F",
             "impl": "0xddBFF32bB1e68eccf251B22FaEAF6F70CBEb5421"
         },
-        "veDFV": {
-            "proxy": "0x3A3BfA1E95857aea70DE3D0CDAAa81044C880B21",
-            "impl": "0xeb443580CB972AeCDef768312e21B322A17A2E54"
-        },
-        "GPT4veDFV": {
-            "proxy": "0x030Bfd99b10c82Ff61A7dd5835Ab7EC75d88b820",
-            "impl": "0x193049265B75aa4Bb0837d8af87E0e6b9952759D"
+        "VotingEscrow": {
+            "proxy": "0x154Ce1c33E12D205D322D6B20f00FFe370323F0B",
+            "impl": "0x2483A4F4C1f680bC190CCB560b5bB805A9576486"
         }
     },
     "mapping": {},
     "roles": {
         "wDFV": {
             "MINTER_ROLE": []
-        },
-        "veDFV": {
-            "MINTER_ROLE": [
-                "address:GPT4veDFV"
-            ],
-            "BURNER_ROLE": [
-                "address:GPT4veDFV"
-            ],
-            "TRANSFER_ROLE": [
-                "address:GPT4veDFV"
-            ]
-        },
-        "GPT4veDFV": {
-            "OPERATOR_ROLE": []
         }
     },
     "config": {
-        "lockPeriodPerReward": "365",
-        "minLockPeriod": "7",
         "gpt.address": "0xeded8858e4756b147a9115c593bc0146847d3af2"
     }
 }
