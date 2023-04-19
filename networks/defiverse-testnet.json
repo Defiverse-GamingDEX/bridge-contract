@@ -11,8 +11,8 @@
             "impl": "0xddBFF32bB1e68eccf251B22FaEAF6F70CBEb5421"
         },
         "VotingEscrow": {
-            "proxy": "0x154Ce1c33E12D205D322D6B20f00FFe370323F0B",
-            "impl": "0x2483A4F4C1f680bC190CCB560b5bB805A9576486"
+            "proxy": "0xAf5fd2992899A6FE23c055C97588E389fdEBF3E0",
+            "impl": "0x726FB5B2E1327e9C0672c9F9542C840bb5bf021e"
         }
     },
     "mapping": {},

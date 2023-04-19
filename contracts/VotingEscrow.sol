@@ -20,19 +20,19 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
   string private _symbol;
   uint8 private _decimals;
 
-  address private _token;
-  uint256 private _supply;
+  address public token;
+  uint256 public supply;
 
   // user address -> locked info
-  mapping(address => LockedBalance) _locked;
+  mapping(address => LockedBalance) public locked;
 
-  uint256 private _epoch;
-  Point[] private _pointHistory; // epoch -> unsigned point
+  uint256 public epoch;
+  Point[100000000000000000000000000000] public point_history; // epoch -> unsigned point
 
-  mapping(address => uint256) _userPointEpoch;
-  mapping(address => Point[]) private _userPointHistory; // user -> Point[user_epoch]
+  mapping(address => uint256) public user_point_epoch;
+  mapping(address => Point[]) public user_point_history; // user -> Point[user_epoch]
 
-  mapping(uint256 => int128) private _slopeChanges; // time -> signed slope change
+  mapping(uint256 => int128) public slope_changes; // time -> signed slope change
 
   modifier onlyAdmin() {
     require(
@@ -51,18 +51,15 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
 
     _name = name_;
     _symbol = symbol_;
-    _token = token_;
     _decimals = 18;
+
+    token = token_;
 
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
   }
 
-  function token() public view override returns (address) {
-    return _token;
-  }
-
   function setToken(address token_) external onlyAdmin {
-    _token = token_;
+    token = token_;
   }
 
   function name() public view override returns (string memory) {
@@ -94,22 +91,24 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
   // }
 
   function _supplyAt(
-    Point memory point,
+    Point memory _point,
     uint256 t
   ) internal view returns (uint256) {
-    Point memory lastPoint = point;
+    Point memory lastPoint = _point;
 
     uint256 t_i = (lastPoint.ts / WEEK) * WEEK;
-    for (uint i = 0; i < 255; i++) {
+    for (uint i = 0; i <= 255; i++) {
       t_i += WEEK;
       int128 d_slope = 0;
       if (t_i > t) {
         t_i = t;
       } else {
-        d_slope = _slopeChanges[t_i];
+        d_slope = slope_changes[t_i];
       }
 
-      lastPoint.bias -= lastPoint.slope * int128(uint128(t_i - lastPoint.ts));
+      lastPoint.bias -=
+        lastPoint.slope *
+        (int128(uint128(t_i)) - int128(uint128(lastPoint.ts)));
 
       if (t_i == t) break;
 
@@ -121,43 +120,40 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     return uint256(int256(lastPoint.bias));
   }
 
-  function epoch() external view returns (uint256) {
-    return _epoch;
-  }
-
-  function totalSupply(uint256 t) public view override returns (uint256) {
-    uint256 ts = t == 0 ? block.timestamp : t;
-    if (_epoch == 0) return 0;
-
-    return _supplyAt(_pointHistory[_epoch], ts);
+  function totalSupply() public view override returns (uint256) {
+    uint256 ts = block.timestamp; //t == 0 ? block.timestamp : t;
+    if (epoch == 0) return 0;
+    Point memory last_point = point_history[epoch];
+    return _supplyAt(last_point, ts);
   }
 
   function balanceOf(address account) public view override returns (uint256) {
     uint256 _ts = block.timestamp;
-    uint256 _userEpoch = _userPointEpoch[account];
+    uint256 _userEpoch = user_point_epoch[account];
     if (_userEpoch == 0) return 0;
 
-    Point memory lastPoint = _userPointHistory[account][_userEpoch];
+    Point memory lastPoint = user_point_history[account][_userEpoch];
     int128 bias = lastPoint.bias -
-      (lastPoint.slope * int128(uint128(_ts - lastPoint.ts)));
+      (lastPoint.slope *
+        (int128(uint128(_ts)) - int128(uint128(lastPoint.ts))));
     if (bias < 0) return 0;
     return uint256(int256(bias));
   }
 
   function get_last_user_slope(address addr) external view returns (int128) {
-    uint256 uepoch = _userPointEpoch[addr];
-    return _userPointHistory[addr][uepoch].slope;
+    uint256 uepoch = user_point_epoch[addr];
+    return user_point_history[addr][uepoch].slope;
   }
 
   function user_point_history__ts(
     address addr,
     uint256 idx
   ) external view returns (uint256) {
-    return _userPointHistory[addr][idx].ts;
+    return user_point_history[addr][idx].ts;
   }
 
   function locked__end(address addr) public view override returns (uint256) {
-    return _locked[addr].end;
+    return locked[addr].end;
   }
 
   function _checkpoint(
@@ -170,26 +166,29 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
 
     int128 old_dslope = 0;
     int128 new_dslope = 0;
-    uint256 epoch = _epoch;
+    uint256 _epoch = epoch;
 
     if (addr != address(0)) {
       if (oldLocked.end > block.timestamp && newLocked.amount > 0) {
         u_old.slope = oldLocked.amount / int128(uint128(MAXTIME));
         u_old.bias =
           u_old.slope *
-          int128(uint128(oldLocked.end - block.timestamp));
+          (int128(uint128(oldLocked.end)) - int128(uint128(block.timestamp)));
       }
       if (newLocked.end > block.timestamp && newLocked.amount > 0) {
         u_new.slope = newLocked.amount / int128(uint128(MAXTIME));
         u_new.bias =
           u_new.slope *
-          int128(uint128(newLocked.end - block.timestamp));
+          (int128(uint128(newLocked.end)) - int128(uint128(block.timestamp)));
       }
 
-      old_dslope = _slopeChanges[oldLocked.end];
+      old_dslope = slope_changes[oldLocked.end];
       if (newLocked.end != 0) {
-        if (newLocked.end == oldLocked.end) new_dslope = old_dslope;
-        else new_dslope = _slopeChanges[newLocked.end];
+        if (newLocked.end == oldLocked.end) {
+          new_dslope = old_dslope;
+        } else {
+          new_dslope = slope_changes[newLocked.end];
+        }
       }
     }
 
@@ -199,36 +198,40 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
       ts: block.timestamp,
       blk: block.number
     });
-    if (epoch > 0) last_point = _pointHistory[epoch];
+    if (_epoch > 0) {
+      last_point = point_history[_epoch];
+    }
     uint256 last_checkpoint = last_point.ts;
 
     Point memory initial_last_point = last_point;
     uint256 block_slope = 0; // dblock/dt
 
-    if (block.timestamp > last_point.ts)
+    if (block.timestamp > last_point.ts) {
       block_slope =
         (MULTIPLIER * (block.number - last_point.blk)) /
         (block.timestamp - last_point.ts);
+    }
 
     uint256 t_i = (last_checkpoint / WEEK) * WEEK;
-    for (uint i = 0; i < 255; i++) {
+    for (uint i = 0; i <= 255; i++) {
       t_i += WEEK;
       int128 d_slope = 0;
       if (t_i > block.timestamp) {
         t_i = block.timestamp;
       } else {
-        d_slope = _slopeChanges[t_i];
+        d_slope = slope_changes[t_i];
       }
 
       last_point.bias -=
         last_point.slope *
-        int128(uint128(t_i - last_checkpoint));
+        (int128(uint128(t_i)) - int128(uint128(last_checkpoint)));
       last_point.slope += d_slope;
 
+      // This can happen
       if (last_point.bias < 0) {
-        // This can happen
         last_point.bias = 0;
       }
+      // This cannot happen - just in case
       if (last_point.slope < 0) {
         last_point.slope = 0;
       }
@@ -238,16 +241,17 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
         initial_last_point.blk +
         (block_slope * (t_i - initial_last_point.ts)) /
         MULTIPLIER;
-      epoch += 1;
+
+      _epoch += 1;
 
       if (t_i == block.timestamp) {
         last_point.blk = block.number;
         break;
       } else {
-        _pointHistory[epoch] = last_point;
+        _addPointHistory(last_point, _epoch);
       }
     }
-    _epoch = epoch;
+    epoch = _epoch;
 
     if (addr != address(0)) {
       last_point.slope += (u_new.slope - u_old.slope);
@@ -261,7 +265,8 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     }
 
     // Record the changed point into history
-    _pointHistory[epoch] = last_point;
+    _addPointHistory(last_point, _epoch);
+
     if (addr != address(0)) {
       // Schedule the slope changes (slope is going down)
       // We subtract new_user_slope from [new_locked.end]
@@ -272,29 +277,52 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
         if (newLocked.end == oldLocked.end) {
           old_dslope -= u_new.slope;
         }
-        _slopeChanges[oldLocked.end] = old_dslope;
+        slope_changes[oldLocked.end] = old_dslope;
       }
 
       if (newLocked.end > block.timestamp) {
         if (newLocked.end > oldLocked.end) {
           new_dslope -= u_new.slope; // old slope disappeared at this point
-          _slopeChanges[newLocked.end] = new_dslope;
+          slope_changes[newLocked.end] = new_dslope;
         }
       }
 
       // Now handle user history
-      _addUserPoint(addr, u_new.bias, u_new.slope);
+      _addUserPointHistory(addr, u_new.bias, u_new.slope);
     }
   }
 
-  function _addUserPoint(address user, int128 bias, int128 slope) internal {
-    _userPointEpoch[user] = _userPointEpoch[user] + 1;
-    _userPointHistory[user][_userPointEpoch[user]] = Point({
-      bias: bias,
-      slope: slope,
-      ts: block.timestamp,
-      blk: block.number
-    });
+  function _addPointHistory(Point memory _point, uint _epoch) internal {
+    // if (point_history.length < 1 || _epoch > (point_history.length - 1)) {
+    //   point_history.push(_point);
+    // } else {
+    //   point_history[_epoch] = _point;
+    // }
+    point_history[_epoch] = _point;
+  }
+
+  function _addUserPointHistory(
+    address user,
+    int128 bias,
+    int128 slope
+  ) internal {
+    uint256 u_epoch = user_point_epoch[user] + 1;
+    user_point_epoch[user] = u_epoch;
+    // user_point_history[user][u_epoch] = Point({
+    //   bias: bias,
+    //   slope: slope,
+    //   ts: block.timestamp,
+    //   blk: block.number
+    // });
+
+    user_point_history[user].push(
+      Point({
+        bias: bias,
+        slope: slope,
+        ts: block.timestamp,
+        blk: block.number
+      })
+    );
   }
 
   function checkpoint() external {
@@ -310,43 +338,48 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     LockedBalance memory locked_balance,
     int128 locktype
   ) internal {
-    LockedBalance memory locked = locked_balance;
-    LockedBalance memory old_locked = locked;
+    LockedBalance memory _locked = locked_balance;
+    LockedBalance memory old_locked = _locked;
 
-    uint256 supply_before = _supply;
-    _supply = supply_before + _value;
+    uint256 supply_before = supply;
+    supply = supply_before + _value;
 
-    locked.amount += int128(uint128(_value));
+    _locked.amount += int128(uint128(_value));
     if (unlock_time != 0) {
-      locked.end = unlock_time;
+      _locked.end = unlock_time;
     }
-    _locked[_addr] = locked;
-    _checkpoint(_addr, old_locked, locked);
+    locked[_addr] = _locked;
+
+    // Possibilities:
+    // Both old_locked.end could be current or expired (>/< block.timestamp)
+    // value == 0 (extend lock) or value > 0 (add to lock or extend lock)
+    // _locked.end > block.timestamp (always)
+    _checkpoint(_addr, old_locked, _locked);
 
     if (_value > 0) {
-      IERC20(_token).transferFrom(_addr, address(this), _value);
+      IERC20(token).transferFrom(_addr, address(this), _value);
     }
 
-    emit Deposit(_addr, _value, locked.end, locktype, block.timestamp);
+    emit Deposit(_addr, _value, _locked.end, locktype, block.timestamp);
     emit Supply(supply_before, supply_before + _value);
   }
 
   function deposit_for(address _addr, uint256 _value) external override {
-    LockedBalance storage locked = _locked[_addr];
+    LockedBalance memory _locked = locked[_addr];
     require(_value > 0, "VotingEscrow: _value must greater than 0");
-    require(locked.amount > 0, "VotingEscrow: no existing lock found");
+    require(_locked.amount > 0, "VotingEscrow: no existing lock found");
     require(
-      locked.end > block.timestamp,
+      _locked.end > block.timestamp,
       "VotingEscrow: cannot add to expired lock. Withdraw"
     );
-    _depositFor(_addr, _value, 0, locked, DEPOSIT_FOR_TYPE);
+    _depositFor(_addr, _value, 0, _locked, DEPOSIT_FOR_TYPE);
   }
 
   function create_lock(uint256 _value, uint256 _unlock_time) external override {
     uint256 unlock_time = (_unlock_time / WEEK) * WEEK;
-    LockedBalance storage locked = _locked[msg.sender];
+    LockedBalance memory _locked = locked[msg.sender];
     require(_value > 0, "VotingEscrow: Nothing is locked");
-    require(locked.amount == 0, "VotingEscrow: withdraw old tokens first");
+    require(_locked.amount == 0, "VotingEscrow: withdraw old tokens first");
     require(
       unlock_time > block.timestamp,
       "VotingEscrow: can only lock until time in the future"
@@ -355,54 +388,54 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
       unlock_time <= block.timestamp + MAXTIME,
       "VotingEscrow: Voting lock can be 1 year max"
     );
-    _depositFor(msg.sender, _value, unlock_time, locked, CREATE_LOCK_TYPE);
+    _depositFor(msg.sender, _value, unlock_time, _locked, CREATE_LOCK_TYPE);
   }
 
   function increase_amount(uint256 _value) external override {
-    LockedBalance memory locked = _locked[msg.sender];
+    LockedBalance memory _locked = locked[msg.sender];
     require(_value > 0, "VotingEscrow: _value must greater than 0");
-    require(locked.amount > 0, "VotingEscrow: no existing lock found");
+    require(_locked.amount > 0, "VotingEscrow: no existing lock found");
     require(
-      locked.end > block.timestamp,
+      _locked.end > block.timestamp,
       "VotingEscrow: cannot add to expired lock. Withdraw"
     );
-    _depositFor(msg.sender, _value, 0, locked, INCREASE_LOCK_AMOUNT);
+    _depositFor(msg.sender, _value, 0, _locked, INCREASE_LOCK_AMOUNT);
   }
 
   function increase_unlock_time(uint256 _unlock_time) external override {
     uint256 unlock_time = (_unlock_time / WEEK) * WEEK;
-    LockedBalance memory locked = _locked[msg.sender];
-    require(locked.end > block.timestamp, "VotingEscrow: lock expired");
-    require(locked.amount > 0, "VotingEscrow: nothing is locked");
+    LockedBalance memory _locked = locked[msg.sender];
+    require(_locked.end > block.timestamp, "VotingEscrow: lock expired");
+    require(_locked.amount > 0, "VotingEscrow: nothing is locked");
     require(
-      unlock_time > locked.end,
+      unlock_time > _locked.end,
       "VotingEscrow: can only increase lock duration"
     );
     require(
       unlock_time <= block.timestamp + MAXTIME,
       "VotingEscrow: can only increase lock duration"
     );
-    _depositFor(msg.sender, 0, unlock_time, locked, INCREASE_UNLOCK_TIME);
+    _depositFor(msg.sender, 0, unlock_time, _locked, INCREASE_UNLOCK_TIME);
   }
 
   function withdraw() external override {
-    LockedBalance memory locked = _locked[msg.sender];
+    LockedBalance memory _locked = locked[msg.sender];
     require(
-      block.timestamp >= locked.end,
+      block.timestamp >= _locked.end,
       "VotingEscrow: the lock didn't expire"
     );
-    uint256 value = uint256(int256(locked.amount));
+    uint256 value = uint256(int256(_locked.amount));
 
-    LockedBalance memory old_locked = locked;
-    locked.end = 0;
-    locked.amount = 0;
-    _locked[msg.sender] = locked;
-    uint256 supply_before = _supply;
-    _supply = supply_before - value;
+    LockedBalance memory old_locked = _locked;
+    _locked.end = 0;
+    _locked.amount = 0;
+    locked[msg.sender] = _locked;
+    uint256 supply_before = supply;
+    supply = supply_before - value;
 
-    _checkpoint(msg.sender, old_locked, locked);
+    _checkpoint(msg.sender, old_locked, _locked);
 
-    IERC20(_token).transfer(msg.sender, value);
+    IERC20(token).transfer(msg.sender, value);
 
     emit Withdraw(msg.sender, value, block.timestamp);
     emit Supply(supply_before, supply_before - value);

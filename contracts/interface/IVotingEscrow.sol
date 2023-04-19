@@ -26,17 +26,13 @@ interface IVotingEscrow {
 
   event Supply(uint256 prevSupply, uint256 supply);
 
-  function token() external view returns (address);
-
   function name() external view returns (string memory);
 
   function symbol() external view returns (string memory);
 
   function decimals() external view returns (uint8);
 
-  function epoch() external view returns (uint256);
-
-  function totalSupply(uint256 timestamp) external view returns (uint256);
+  function totalSupply() external view returns (uint256);
 
   function balanceOf(address account) external view returns (uint256);
 

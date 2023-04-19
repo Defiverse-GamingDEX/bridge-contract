@@ -6,9 +6,11 @@ const { networks } = require("../truffle-config.js");
 const test = async (contractDeployer) => {
   let rs = null;
   let MockOAS = await contractDeployer.loadContract("MockOAS");
-  let DFV = await contractDeployer.loadContract("wDFV");
-  // let veDFV = await contractDeployer.loadContract("veDFV");
-
+  let wDFV = await contractDeployer.loadContract("wDFV");
+  let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
+  const WEEK = 7 * 86400;
+  const YEAR = 365 * 86400;
+  const now = Math.floor(Date.now() / 1000);
   try {
     // await wDFV.mint(
     //   "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE",
@@ -18,7 +20,50 @@ const test = async (contractDeployer) => {
     //   "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE",
     //   "100000000000000000000000000"
     // );
-    // await wDFV.approve(GPT4veDFV.address, "100000000000000000000");
+    console.log("approve: start");
+    await wDFV.approve(VotingEscrow.address, "1000000000000000000000");
+    console.log("approve: end");
+
+    console.log(`locked: start: ${now + YEAR}`);
+    rs = await VotingEscrow.locked(
+      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
+    );
+    console.log("locked: end ", rs);
+
+    rs = await VotingEscrow.epoch();
+    console.log("epoch: before", rs.toString());
+
+    rs = await VotingEscrow.user_point_epoch(
+      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
+    );
+    console.log("user_point_epoch: before", rs.toString());
+
+    // rs = await VotingEscrow.point_history(0);
+    // console.log("point_history0: ", rs);
+
+    // rs = await VotingEscrow.point_history(1);
+    // console.log("point_history1: ", rs);
+
+    console.log(`create_lock: start: ${now + YEAR}`);
+    rs = await VotingEscrow.create_lock("1000000000000000000", now + YEAR);
+    console.log("create_lock: end ", rs);
+
+    rs = await VotingEscrow.epoch();
+    console.log("epoch: after", rs.toString());
+
+    rs = await VotingEscrow.user_point_epoch(
+      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
+    );
+    console.log("user_point_epoch: after", rs.toString());
+
+    rs = await VotingEscrow.balanceOf(
+      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
+    );
+    console.log("balanceOf: after", rs.toString());
+
+    rs = await VotingEscrow.totalSupply();
+    console.log("totalSupply: after", rs.toString());
+
     // await GPT4veDFV.unlockGPT();
     // await GPT4veDFV.lockGPT("1000000000000000000", 365);
     // rs = await GPT4veDFV.estimateReward("1000000000000000000", 365);
@@ -75,5 +120,5 @@ module.exports = async function (deployer, network, accounts) {
   // Grant roles
   await contractDeployer.grantRoles();
 
-  await test(contractDeployer);
+  // await test(contractDeployer);
 };
