@@ -26,6 +26,8 @@ interface IVotingEscrow {
 
   event Supply(uint256 prevSupply, uint256 supply);
 
+  function token() external view returns (address);
+
   function name() external view returns (string memory);
 
   function symbol() external view returns (string memory);
