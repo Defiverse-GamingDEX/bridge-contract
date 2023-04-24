@@ -114,6 +114,12 @@ module.exports = async function (deployer, network, accounts) {
       VotingEscrow: {
         initArgs: ["veDFV(Mock)", "veDFV", "config:gpt.address"],
       },
+      GaugeController: {
+        initArgs: ["address:VotingEscrow", "config:authorizerAdaptor.address"],
+      },
+      VeBoostV2: {
+        initArgs: ["address:VotingEscrow"],
+      }
     },
   });
 

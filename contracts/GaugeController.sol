@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 // import "./interface/IVotingEscrow.sol";
 
@@ -12,7 +13,7 @@ interface IVotingEscrow {
     function locked__end(address addr) external view returns (uint256);
 }
 
-contract GaugeController is ReentrancyGuard {
+contract GaugeController is ReentrancyGuard, AccessControlEnumerableUpgradeable {
     // 7 * 86400 seconds - all future times are rounded by week
     uint256 constant WEEK = 604800;
 
@@ -38,9 +39,9 @@ contract GaugeController is ReentrancyGuard {
 
     uint256 constant MULTIPLIER = 10 ** 18;
 
-    address immutable TOKEN; // 80-20 BAL-WETH BPT token
-    address immutable VOTING_ESCROW; // Voting escrow
-    address immutable AUTHORIZER_ADAPTOR; // Authorizer Adaptor
+    address TOKEN; // 80-20 BAL-WETH BPT token
+    address VOTING_ESCROW; // Voting escrow
+    address AUTHORIZER_ADAPTOR; // Authorizer Adaptor
 
     // Gauge parameters
     // All numbers are "fixed point" on the basis of 1e18
@@ -79,7 +80,11 @@ contract GaugeController is ReentrancyGuard {
     mapping(uint256 => mapping(uint256 => uint256)) public points_type_weight; // type_id -> time -> type weight
     uint256[1000000000] public time_type_weight; // type_id -> last scheduled time (next week)
 
-    constructor(address _voting_escrow, address _authorizer_adaptor) {
+    function initialize(address _voting_escrow, address _authorizer_adaptor) public initializer {
+        __AccessControlEnumerable_init();
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+
         require(_voting_escrow != address(0), "Invalid address for voting escrow");
         require(_authorizer_adaptor != address(0), "Invalid address for authorizer adaptor");
 

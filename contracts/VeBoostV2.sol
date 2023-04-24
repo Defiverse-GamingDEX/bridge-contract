@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "./interface/IVotingEscrow.sol";
 
 // interface BoostV1 {
@@ -15,7 +16,7 @@ interface ERC1271 {
     function isValidSignature(bytes32 _hash, bytes calldata _signature) external view returns (bytes32);
 }
 
-contract VeBoostV2 {
+contract VeBoostV2 is AccessControlEnumerableUpgradeable {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Boost(address indexed _from, address indexed _to, uint256 _bias, uint256 _slope, uint256 _start);
@@ -40,9 +41,8 @@ contract VeBoostV2 {
 
     uint256 public constant WEEK = 86400 * 7;
 
-    address public immutable BOOST_V1;
-    address public immutable VE;
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    address public VE;
+    bytes32 public DOMAIN_SEPARATOR;
 
     mapping(address => mapping(address => uint256)) public allowance;
     mapping(address => uint256) public nonces;
@@ -55,8 +55,9 @@ contract VeBoostV2 {
 
     mapping(uint256 => bool) public migrated;
 
-    constructor(address _boost_v1, address _ve) {
-        BOOST_V1 = _boost_v1;
+    function initialize(address _ve) public initializer {
+        __AccessControlEnumerable_init();
+
         uint256 id;
         assembly {
             id := chainid()
@@ -65,6 +66,8 @@ contract VeBoostV2 {
             abi.encode(EIP712_TYPEHASH, keccak256(bytes(NAME)), keccak256(bytes(VERSION)), id, address(this))
         );
         VE = _ve;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         emit Transfer(address(0), msg.sender, 0);
     }

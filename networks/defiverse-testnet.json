@@ -13,6 +13,14 @@
         "VotingEscrow": {
             "proxy": "0xAf5fd2992899A6FE23c055C97588E389fdEBF3E0",
             "impl": "0x726FB5B2E1327e9C0672c9F9542C840bb5bf021e"
+        },
+        "VeBoostV2": {
+            "proxy": "0xc57CB0bB92CaD34dc14C5aCEfd7d62e08D9D454a",
+            "impl": "0x1e8253E506409268e009B31D8dDCdA73e19464c7"
+        },
+        "GaugeController": {
+            "proxy": "0x32B3C65b725730FF63B5D3D216b6A8AeF8A03494",
+            "impl": "0x74cB7844Fd778D6EF254869098742aAd1Da896a8"
         }
     },
     "mapping": {},
@@ -22,6 +30,7 @@
         }
     },
     "config": {
-        "gpt.address": "0xeded8858e4756b147a9115c593bc0146847d3af2"
+        "gpt.address": "0xeded8858e4756b147a9115c593bc0146847d3af2",
+        "authorizerAdaptor.address": "0x6b78bEFcdbd37C6487A8A5dcCBE1122604184FA1"
     }
 }
