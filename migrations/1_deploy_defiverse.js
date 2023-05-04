@@ -3,6 +3,13 @@ const chalk = require("cli-color");
 const ContractDeployerWithTruffle = require("@evmchain/contract-deployer/src/truffle");
 const { networks } = require("../truffle-config.js");
 
+const migrate = async (contractDeployer) => {
+  let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
+
+  //await VotingEscrow.migrate("0x343eCF760a020936eEE8D655b43C5cBD40769A05");
+  await VotingEscrow.migrate("0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE");
+};
+
 const test = async (contractDeployer) => {
   let rs = null;
   let MockOAS = await contractDeployer.loadContract("MockOAS");
@@ -119,7 +126,7 @@ module.exports = async function (deployer, network, accounts) {
       },
       VeBoostV2: {
         initArgs: ["address:VotingEscrow"],
-      }
+      },
     },
   });
 
@@ -127,4 +134,6 @@ module.exports = async function (deployer, network, accounts) {
   await contractDeployer.grantRoles();
 
   // await test(contractDeployer);
+
+  // await migrate(contractDeployer);
 };

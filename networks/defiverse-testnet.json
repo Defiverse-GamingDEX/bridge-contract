@@ -12,7 +12,7 @@
         },
         "VotingEscrow": {
             "proxy": "0xAf5fd2992899A6FE23c055C97588E389fdEBF3E0",
-            "impl": "0x726FB5B2E1327e9C0672c9F9542C840bb5bf021e"
+            "impl": "0x2cF08F154f01535a5610Bb6db88Fd3dB01BD67FF"
         },
         "VeBoostV2": {
             "proxy": "0xc57CB0bB92CaD34dc14C5aCEfd7d62e08D9D454a",

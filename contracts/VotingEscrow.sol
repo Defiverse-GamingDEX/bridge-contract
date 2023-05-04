@@ -306,14 +306,14 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     int128 bias,
     int128 slope
   ) internal {
+    if (user_point_history[user].length == 0) {
+      user_point_history[user].push(
+        Point({ bias: 0, slope: 0, ts: block.timestamp, blk: block.number })
+      );
+    }
+
     uint256 u_epoch = user_point_epoch[user] + 1;
     user_point_epoch[user] = u_epoch;
-    // user_point_history[user][u_epoch] = Point({
-    //   bias: bias,
-    //   slope: slope,
-    //   ts: block.timestamp,
-    //   blk: block.number
-    // });
 
     user_point_history[user].push(
       Point({
