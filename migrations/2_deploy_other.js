@@ -2,8 +2,8 @@ module.exports = async function (deployer) {
   // const multicall = artifacts.require("Multicall");
   // deployer.deploy(multicall);
 
-  const EventEmitter = artifacts.require("EventEmitter");
-  await deployer.deploy(EventEmitter);
+  // const EventEmitter = artifacts.require("EventEmitter");
+  // await deployer.deploy(EventEmitter);
 
   // const TokenDFV = artifacts.require("TokenDFV");
   // deployer.deploy(TokenDFV, "Defi Verse Token", "DFV", "10000000000000000000000");
@@ -14,7 +14,7 @@ module.exports = async function (deployer) {
   //   "100000000000000000000000"
   // );
 
-  // const MockERC20 = await artifacts.require("MockERC20");
+  const MockERC20 = await artifacts.require("MockERC20");
   // const DAI = await MockERC20.at("0x8d1436958Bcbd5dB471F95e665Ac98DDE1E816f1");
   // await DAI.mint(
   //   "0x343eCF760a020936eEE8D655b43C5cBD40769A05",
@@ -33,9 +33,9 @@ module.exports = async function (deployer) {
   //   "100000000000000000000000"
   // );
 
-  // deployer.deploy(MockERC20, "DAI Stable Coin", "DAI", "10000000000000000000000");
+  // await deployer.deploy(MockERC20, "Game Token B", "GMB", "1000000000000000000000");
 
-  // deployer.deploy(MockERC20, "Tether", "USDT", "10000000000000000000000");
+  // await  deployer.deploy(MockERC20, "Game Token A", "GMA", "1000000000000000000000");
 
-  // deployer.deploy(MockERC20, "USD Coin", "USDC", "10000000000000000000000");
+  // await deployer.deploy(MockERC20, "USDT", "USDT", "10000000000000000000000");
 };

@@ -1,26 +1,30 @@
 {
     "contracts": {
-        "DFProxyAdmin": "0xeF7828EF2E34a07173cfCa669b98d09cd1d29809",
-        "Multicall2": "0xDD99819dDB53fFcc9FF77d8Cda4553b17D27b9a4",
+        "DFProxyAdmin": "0x753E95C5d9ff5A275548d516bC7cDE64D0a6ACAB",
+        "Multicall2": "0xB4FF7AeCCD6dfC8889e45170Caeb128A298821e2",
         "MockOAS": {
-            "proxy": "0xABD79d01da7Db35f53c4F495FE0684618C8535A6",
-            "impl": "0x0a265724aF058C70e763dBB9F22A902326b453b9"
+            "proxy": "0x7914aA2D50CC4E9B5A6fb6Ac58EC7095927B8897",
+            "impl": "0xc5Ca745724E7b12D35BFA5e4Fa60C08eC0DC3E55"
         },
         "wDFV": {
-            "proxy": "0xEf67932B5DF15301B2dcCfd9120f7eC1B598561F",
-            "impl": "0xddBFF32bB1e68eccf251B22FaEAF6F70CBEb5421"
+            "proxy": "0x738cB40a7CFcD770B9972F3e992811c08613f38D",
+            "impl": "0xc22a9217d0F6F75B1117ed3158087771D3065466"
         },
         "VotingEscrow": {
-            "proxy": "0xAf5fd2992899A6FE23c055C97588E389fdEBF3E0",
-            "impl": "0x2cF08F154f01535a5610Bb6db88Fd3dB01BD67FF"
+            "proxy": "0x78c155933E62b4E3F70F23A232f9176470bf41C9",
+            "impl": "0x03db44993f22aae59430288c957Cc2C63cD069F0"
         },
         "VeBoostV2": {
-            "proxy": "0xc57CB0bB92CaD34dc14C5aCEfd7d62e08D9D454a",
-            "impl": "0x1e8253E506409268e009B31D8dDCdA73e19464c7"
+            "proxy": "0x909407655EC51eD8b16fA98b599c357044308975",
+            "impl": "0xE36AD20DE9c703D03928912Ced86E4D9a8F8945e"
         },
         "GaugeController": {
-            "proxy": "0x32B3C65b725730FF63B5D3D216b6A8AeF8A03494",
-            "impl": "0x74cB7844Fd778D6EF254869098742aAd1Da896a8"
+            "proxy": "0x5173C46c9E4585732b7660770477449451106553",
+            "impl": "0xD17f1B3a51cD854fc2b058d03A6f2FdB58c25ffC"
+        },
+        "Oracle": {
+            "proxy": "0xed60472a4dc5410009B456019D6f88FA6bD480ee",
+            "impl": "0x6F27A9E1d3B3908c62aBD21910286ab7eaeE7bAe"
         }
     },
     "mapping": {},
@@ -30,7 +34,7 @@
         }
     },
     "config": {
-        "gpt.address": "0xeded8858e4756b147a9115c593bc0146847d3af2",
-        "authorizerAdaptor.address": "0x6b78bEFcdbd37C6487A8A5dcCBE1122604184FA1"
+        "gpt.address": "0xebc6be23b7bd76774e8a9a168619954d07818c23",
+        "authorizerAdaptor.address": "0x203e51468AA86aB2963F1b58d54AAb173e2A4CCD"
     }
 }

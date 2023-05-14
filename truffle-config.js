@@ -15,45 +15,12 @@ const providerDefiVerseDev = new HDWalletProvider(
   16116
 );
 
-const providerMCHVerseDev = new HDWalletProvider(
-  WALLET_TESTNET,
-  "https://rpc.oasys.mycryptoheroes.net/",
-  0,
-  1,
-  true,
-  "m/44'/60'/0'/0/",
-  29548
-);
-
-const providerGoerli = new HDWalletProvider(
-  WALLET_TESTNET,
-  `https://goerli.infura.io/v3/0d5c5422f2f8442cadf23d2f3e3db385`,
-  0,
-  1,
-  true,
-  "m/44'/60'/0'/0/",
-  5
-);
-
 module.exports = {
   networks: {
     development: {
       host: "127.0.0.1",
       port: 9545,
       network_id: "*",
-    },
-    "mchverse-testnet": {
-      provider: providerMCHVerseDev,
-      network_id: "*",
-      timeoutBlocks: 40000,
-      gasPrice: 0,
-    },
-    "goerli-testnet": {
-      provider: providerGoerli,
-      network_id: "*",
-      timeoutBlocks: 40000,
-      confirmations: 1,
-      skipDryRun: true,
     },
     "defiverse-testnet": {
       provider: providerDefiVerseDev,

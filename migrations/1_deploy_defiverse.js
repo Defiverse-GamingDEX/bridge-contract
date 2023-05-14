@@ -3,11 +3,39 @@ const chalk = require("cli-color");
 const ContractDeployerWithTruffle = require("@evmchain/contract-deployer/src/truffle");
 const { networks } = require("../truffle-config.js");
 
+const setup = async (contractDeployer) => {
+  let oracle = await contractDeployer.loadContract("Oracle");
+  await oracle.addProtectedToken("0x43831636C9cEc4C9c9A950B588Ac8Ec971588754");
+}
+
+const mint = async (contractDeployer) => {
+  // let wDFV = await contractDeployer.loadContract("wDFV");
+  // await wDFV.mint("0x68C297EDdd953961E81532202e48b048e459c7c3", "1000000000000000000000000")
+
+  let MockOAS = await contractDeployer.loadContract("MockOAS");
+  await MockOAS.mint("0x68C297EDdd953961E81532202e48b048e459c7c3", "1000000000000000000000000")
+}
+
 const migrate = async (contractDeployer) => {
   let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
 
   //await VotingEscrow.migrate("0x343eCF760a020936eEE8D655b43C5cBD40769A05");
   await VotingEscrow.migrate("0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE");
+};
+
+const test2 = async (contractDeployer) => {
+  console.log("\n\n");
+
+  let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
+
+  rs = await VotingEscrow.epoch();
+  console.log("epoch: before", rs.toString());
+
+  rs = await VotingEscrow.point_history(0);
+  console.log("point_history: before", rs);
+
+  rs = await VotingEscrow.point_history(1);
+  console.log("point_history: before", rs);
 };
 
 const test = async (contractDeployer) => {
@@ -117,7 +145,7 @@ module.exports = async function (deployer, network, accounts) {
     args: {
       Multicall2: { initArgs: [] },
       MockOAS: { initArgs: ["OAS(Mock)", "OAS"] },
-      DFV: { initArgs: ["DeFi Verse Token(Mock)", "DFV"] },
+      wDFV: { initArgs: ["DeFi Verse Token(Mock)", "DFV"] },
       VotingEscrow: {
         initArgs: ["veDFV(Mock)", "veDFV", "config:gpt.address"],
       },
@@ -127,13 +155,18 @@ module.exports = async function (deployer, network, accounts) {
       VeBoostV2: {
         initArgs: ["address:VotingEscrow"],
       },
+      Oracle: {
+        initArgs: [],
+      },
     },
   });
 
   // Grant roles
   await contractDeployer.grantRoles();
 
-  // await test(contractDeployer);
+  await setup(contractDeployer);
+
+  // await mint(contractDeployer);
 
   // await migrate(contractDeployer);
 };

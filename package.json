@@ -7,7 +7,8 @@
     "compile": "truffle compile && node scripts/exportAbi.js",
     "deploy": "truffle migrate --network defiverse-testnet --reset --f 1 --to 1",
     "deploy:defiverse:testnet": "truffle migrate --network defiverse-testnet --reset --f 1 --to 1",
-    "deploy:goerli:testnet": "truffle migrate --network goerli-testnet --reset --f 1 --to 1",
+    "deploy:usdc:testnet": "truffle migrate --network defiverse-testnet --reset --f 3 --to 3",
+    "deploy:token:testnet": "truffle migrate --network defiverse-testnet --reset --f 2 --to 2",
     "test": "npx hardhat test"
   },
   "repository": {

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "./interface/IVotingEscrow.sol";
 
@@ -94,7 +93,11 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     Point memory _point,
     uint256 t
   ) internal view returns (uint256) {
-    Point memory lastPoint = _point;
+    Point memory lastPoint;
+    lastPoint.bias = _point.bias;
+    lastPoint.slope = _point.slope;
+    lastPoint.blk = _point.blk;
+    lastPoint.ts = _point.ts;
 
     uint256 t_i = (lastPoint.ts / WEEK) * WEEK;
     for (uint i = 0; i <= 255; i++) {
@@ -169,7 +172,7 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     uint256 _epoch = epoch;
 
     if (addr != address(0)) {
-      if (oldLocked.end > block.timestamp && newLocked.amount > 0) {
+      if (oldLocked.end > block.timestamp && oldLocked.amount > 0) {
         u_old.slope = oldLocked.amount / int128(uint128(MAXTIME));
         u_old.bias =
           u_old.slope *
@@ -203,7 +206,12 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     }
     uint256 last_checkpoint = last_point.ts;
 
-    Point memory initial_last_point = last_point;
+    Point memory initial_last_point;
+    initial_last_point.bias = last_point.bias;
+    initial_last_point.slope = last_point.slope;
+    initial_last_point.blk = last_point.blk;
+    initial_last_point.ts = last_point.ts;
+
     uint256 block_slope = 0; // dblock/dt
 
     if (block.timestamp > last_point.ts) {
@@ -298,7 +306,11 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     // } else {
     //   point_history[_epoch] = _point;
     // }
-    point_history[_epoch] = _point;
+    // point_history[_epoch] = _point;
+    point_history[_epoch].bias = _point.bias;
+    point_history[_epoch].slope = _point.slope;
+    point_history[_epoch].blk = _point.blk;
+    point_history[_epoch].ts = _point.ts;
   }
 
   function _addUserPointHistory(
@@ -339,7 +351,9 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     int128 locktype
   ) internal {
     LockedBalance memory _locked = locked_balance;
-    LockedBalance memory old_locked = _locked;
+    LockedBalance memory old_locked;
+    old_locked.amount = _locked.amount;
+    old_locked.end = _locked.end;
 
     uint256 supply_before = supply;
     supply = supply_before + _value;
@@ -426,7 +440,10 @@ contract VotingEscrow is IVotingEscrow, AccessControlEnumerableUpgradeable {
     );
     uint256 value = uint256(int256(_locked.amount));
 
-    LockedBalance memory old_locked = _locked;
+    LockedBalance memory old_locked;
+    old_locked.end = _locked.end;
+    old_locked.amount = _locked.amount;
+
     _locked.end = 0;
     _locked.amount = 0;
     locked[msg.sender] = _locked;
