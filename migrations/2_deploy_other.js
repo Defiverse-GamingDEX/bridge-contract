@@ -38,4 +38,10 @@ module.exports = async function (deployer) {
   // await  deployer.deploy(MockERC20, "Game Token A", "GMA", "1000000000000000000000");
 
   // await deployer.deploy(MockERC20, "USDT", "USDT", "10000000000000000000000");
+
+  const contract = await MockERC20.at("0xCC90040a931a8147cc2A4411c68348a5a3a363a0");
+  await contract.mint(
+    "0x68C297EDdd953961E81532202e48b048e459c7c3",
+    "1000000000000000000000000"
+  );
 };

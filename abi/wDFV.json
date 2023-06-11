@@ -166,6 +166,20 @@
     "constant": true
   },
   {
+    "inputs": [],
+    "name": "SNAPSHOT_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
     "inputs": [
       {
         "internalType": "address",

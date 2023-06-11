@@ -5,115 +5,99 @@ const { networks } = require("../truffle-config.js");
 
 const setup = async (contractDeployer) => {
   let oracle = await contractDeployer.loadContract("Oracle");
-  await oracle.addProtectedToken("0x43831636C9cEc4C9c9A950B588Ac8Ec971588754");
-}
 
-const mint = async (contractDeployer) => {
-  // let wDFV = await contractDeployer.loadContract("wDFV");
-  // await wDFV.mint("0x68C297EDdd953961E81532202e48b048e459c7c3", "1000000000000000000000000")
+  let tokenA = "0x43831636C9cEc4C9c9A950B588Ac8Ec971588754";
+  let tokenB = "0xCC90040a931a8147cc2A4411c68348a5a3a363a0";
+  // await oracle.addProtectedToken(tokenA);
+  // await oracle.addProtectedToken(tokenB);
 
-  let MockOAS = await contractDeployer.loadContract("MockOAS");
-  await MockOAS.mint("0x68C297EDdd953961E81532202e48b048e459c7c3", "1000000000000000000000000")
-}
+  console.log("\nsetup");
+  console.log("updateEarn");
 
-const migrate = async (contractDeployer) => {
-  let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
+  // await oracle.updateEarn(
+  //   "0x36FB86bF34B73cF9B1ebe034DA10D9143Dc46cd6",
+  //   tokenA,
+  //   "10000000000000000000"
+  // );
+  // await oracle.updateEarn(
+  //   "0x36FB86bF34B73cF9B1ebe034DA10D9143Dc46cd6",
+  //   tokenB,
+  //   "20000000000000000000"
+  // );
 
-  //await VotingEscrow.migrate("0x343eCF760a020936eEE8D655b43C5cBD40769A05");
-  await VotingEscrow.migrate("0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE");
+  // await oracle.updateEarn(
+  //   "0xfF510480dDEa89B8b50DB0B81E1C242a3F225E90",
+  //   tokenA,
+  //   "30000000000000000000"
+  // );
+  // await oracle.updateEarn(
+  //   "0xfF510480dDEa89B8b50DB0B81E1C242a3F225E90",
+  //   tokenB,
+  //   "40000000000000000000"
+  // );
+
+  // await oracle.updateEarn(
+  //   "0xC3Cb00e9B223fEa64801943d7379b86DA2C94cF0",
+  //   tokenA,
+  //   "500000000000000000000"
+  // );
+  // await oracle.updateEarn(
+  //   "0xC3Cb00e9B223fEa64801943d7379b86DA2C94cF0",
+  //   tokenB,
+  //   "500000000000000000000"
+  // );
 };
 
-const test2 = async (contractDeployer) => {
-  console.log("\n\n");
+const setupGauge = async (contractDeployer) => {
+  let AuthorizerAdaptor = await contractDeployer.loadContract(
+    "AuthorizerAdaptor"
+  );
 
-  let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
+  console.log("\n");
+  console.log("======================= setupGauge");
 
-  rs = await VotingEscrow.epoch();
-  console.log("epoch: before", rs.toString());
+  const gaugeController = "0x782896795C815d833D1d25C9cAf418AeE57Aa011";
 
-  rs = await VotingEscrow.point_history(0);
-  console.log("point_history: before", rs);
+  let tx = await AuthorizerAdaptor.setup(
+    gaugeController,
+    "0x68C297EDdd953961E81532202e48b048e459c7c3"
+  );
+  console.log("tx:", tx);
 
-  rs = await VotingEscrow.point_history(1);
-  console.log("point_history: before", rs);
+  tx = await AuthorizerAdaptor.getGauges();
+  console.log("getGauges:", tx);
+};
+
+const mint = async (contractDeployer) => {
+  // let wDFV = await contractDeployer.loadContract("BalancerGovernanceToken");
+  // await wDFV.mint("0x68C297EDdd953961E81532202e48b048e459c7c3", "1000000000000000000000000")
+
+  // let MockOAS = await contractDeployer.loadContract("MockOAS");
+  // await MockOAS.mint("0x68C297EDdd953961E81532202e48b048e459c7c3", "1000000000000000000000000")
+
+  let wDFV = await contractDeployer.loadContract("BalancerGovernanceToken");
+  await wDFV.mint(
+    "0x68C297EDdd953961E81532202e48b048e459c7c3",
+    "1000000000000000000000000"
+  );
 };
 
 const test = async (contractDeployer) => {
-  let rs = null;
-  let MockOAS = await contractDeployer.loadContract("MockOAS");
-  let wDFV = await contractDeployer.loadContract("wDFV");
-  let VotingEscrow = await contractDeployer.loadContract("VotingEscrow");
-  const WEEK = 7 * 86400;
-  const YEAR = 365 * 86400;
-  const now = Math.floor(Date.now() / 1000);
-  try {
-    // await wDFV.mint(
-    //   "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE",
-    //   "100000000000000000000000000"
-    // );
-    // await MockOAS.mint(
-    //   "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE",
-    //   "100000000000000000000000000"
-    // );
-    console.log("approve: start");
-    await wDFV.approve(VotingEscrow.address, "1000000000000000000000");
-    console.log("approve: end");
+  let wDFV = await contractDeployer.loadContract("BalancerGovernanceToken");
 
-    console.log(`locked: start: ${now + YEAR}`);
-    rs = await VotingEscrow.locked(
-      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
-    );
-    console.log("locked: end ", rs);
+  let adminRole = await wDFV.DEFAULT_ADMIN_ROLE();
 
-    rs = await VotingEscrow.epoch();
-    console.log("epoch: before", rs.toString());
+  await wDFV.grantRole(adminRole, "0x68C297EDdd953961E81532202e48b048e459c7c3");
 
-    rs = await VotingEscrow.user_point_epoch(
-      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
-    );
-    console.log("user_point_epoch: before", rs.toString());
+  let rs = await wDFV.hasRole(
+    adminRole,
+    "0x68C297EDdd953961E81532202e48b048e459c7c3"
+  );
+  console.log("rs1:", rs);
 
-    // rs = await VotingEscrow.point_history(0);
-    // console.log("point_history0: ", rs);
-
-    // rs = await VotingEscrow.point_history(1);
-    // console.log("point_history1: ", rs);
-
-    console.log(`create_lock: start: ${now + YEAR}`);
-    rs = await VotingEscrow.create_lock("1000000000000000000", now + YEAR);
-    console.log("create_lock: end ", rs);
-
-    rs = await VotingEscrow.epoch();
-    console.log("epoch: after", rs.toString());
-
-    rs = await VotingEscrow.user_point_epoch(
-      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
-    );
-    console.log("user_point_epoch: after", rs.toString());
-
-    rs = await VotingEscrow.balanceOf(
-      "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE"
-    );
-    console.log("balanceOf: after", rs.toString());
-
-    rs = await VotingEscrow.totalSupply();
-    console.log("totalSupply: after", rs.toString());
-
-    // await GPT4veDFV.unlockGPT();
-    // await GPT4veDFV.lockGPT("1000000000000000000", 365);
-    // rs = await GPT4veDFV.estimateReward("1000000000000000000", 365);
-    // console.log("getReward:", rs.toString());
-    // rs = await GPT4veDFV.lockPeriodPerReward();
-    // console.log("veDFVPerDay:", rs.toString());
-    // rs = await GPT4veDFV.minLockPeriod();
-    // console.log("minLockPeriod:", rs.toString());
-    // rs = await GPT4veDFV.userInfo("0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE");
-    // console.log("userInfo:", rs);
-    // rs = await veDFV.balanceOf("0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE");
-    // console.log("balanceOf:", rs.toString());
-  } catch (ex) {
-    console.error(ex);
-  }
+  // let role = await wDFV.MINTER_ROLE();
+  // rs = await wDFV.hasRole(role, "0x99DbC45D25698765Ca869CeCec5E25729B224B21");
+  // console.log("rs2:", rs);
 };
 
 module.exports = async function (deployer, network, accounts) {
@@ -145,15 +129,14 @@ module.exports = async function (deployer, network, accounts) {
     args: {
       Multicall2: { initArgs: [] },
       MockOAS: { initArgs: ["OAS(Mock)", "OAS"] },
-      wDFV: { initArgs: ["DeFi Verse Token(Mock)", "DFV"] },
-      VotingEscrow: {
-        initArgs: ["veDFV(Mock)", "veDFV", "config:gpt.address"],
+      Authorizer: {
+        initArgs: ["config:admin.address"],
       },
-      GaugeController: {
-        initArgs: ["address:VotingEscrow", "config:authorizerAdaptor.address"],
+      AuthorizerAdaptor: {
+        initArgs: ["config:vault.address"],
       },
-      VeBoostV2: {
-        initArgs: ["address:VotingEscrow"],
+      BalancerGovernanceToken: {
+        initArgs: ["DeFi Verse Governance Token", "DFV"],
       },
       Oracle: {
         initArgs: [],
@@ -164,9 +147,11 @@ module.exports = async function (deployer, network, accounts) {
   // Grant roles
   await contractDeployer.grantRoles();
 
-  await setup(contractDeployer);
-
   // await mint(contractDeployer);
 
-  // await migrate(contractDeployer);
+  // await test(contractDeployer);
+
+  // await setupGauge(contractDeployer);
+
+  // await setup(contractDeployer);
 };

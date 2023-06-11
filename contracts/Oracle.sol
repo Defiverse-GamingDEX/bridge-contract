@@ -15,10 +15,13 @@ contract Oracle is IOracle, AccessControlEnumerableUpgradeable {
   // user => token => sold amount
   mapping(address => mapping(address => uint256)) private _userSold;
 
-  uint256 MAX_INT =
-    115792089237316195423570985008687907853269984665640564039457584007913129639935;
-
+  // token address => is protected
   mapping(address => bool) private _protectedToken;
+
+  // game address => true
+  mapping(address => bool) private _registeredGame;
+
+  address[] private _tokenList;
 
   modifier onlyAdmin() {
     require(
@@ -36,6 +39,11 @@ contract Oracle is IOracle, AccessControlEnumerableUpgradeable {
     _;
   }
 
+  modifier requireWhitelisted() {
+    require(_registeredGame[_msgSender()], "Oracle: caller is not whitelisted");
+    _;
+  }
+
   function initialize() public initializer {
     __AccessControlEnumerable_init();
 
@@ -45,30 +53,48 @@ contract Oracle is IOracle, AccessControlEnumerableUpgradeable {
 
   function addProtectedToken(address token_) public onlyAdmin {
     _protectedToken[token_] = true;
+    _tokenList.push(token_);
   }
 
   function removeProtectedToken(address token_) public onlyAdmin {
     _protectedToken[token_] = false;
+    for (uint i = 0; i < _tokenList.length; i++) {
+      if (_tokenList[i] == token_) {
+        _tokenList[i] = address(0);
+      }
+    }
   }
 
   function isProtectedToken(address token_) public view returns (bool) {
     return _protectedToken[token_];
   }
 
+  function setWhitelist(address addr_, bool isWhitelist_) public onlyAdmin {
+    _registeredGame[addr_] = isWhitelist_;
+  }
+
+  function isWhitelisted(address addr_) public view returns (bool) {
+    return _registeredGame[addr_];
+  }
+
+  function getProtectedTokens() public view returns (address[] memory) {
+    return _tokenList;
+  }
+
   function updateEarn(
     address user_,
     address token_,
     uint256 amount_
-  ) public onlyOperator {
+  ) public requireWhitelisted {
     _userEarned[user_][token_] = amount_ + _userEarned[user_][token_];
+
+    emit TokenEarned(msg.sender, user_, token_, amount_);
   }
 
-  function updateSold(
-    address user_,
-    address token_,
-    uint256 amount_
-  ) public onlyOperator {
+  function updateSold(address user_, address token_, uint256 amount_) public {
     _userSold[user_][token_] = amount_ + _userSold[user_][token_];
+
+    emit TokenSold(msg.sender, user_, token_, amount_);
   }
 
   function getSellable(
