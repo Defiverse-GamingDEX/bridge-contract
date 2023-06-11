@@ -18,8 +18,6 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
   bytes32 private _actionIdDisambiguator;
   IVault private _vault;
 
-  address[] private _gauges;
-
   modifier onlyAdmin() {
     require(
       hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
@@ -35,100 +33,6 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
     _vault = vault_;
 
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-  }
-
-  function getGauges() public view returns (address[] memory) {
-    return _gauges;
-  }
-
-  function setup(address gaugeController, address veBALGaugeRecipient) public {
-    // IGaugeController(gaugeController).add_type("Liquidity Mining Committee", 0);
-    // IGaugeController(gaugeController).add_type("veBAL", 0);
-    // IGaugeController(gaugeController).add_type("Ethereum", 0);
-
-    // _createSingleRecipientGauge(
-    //   IGaugeAdder.GaugeType.veBAL,
-    //   "Temporary veBAL Liquidity Mining BAL Holder",
-    //   veBALGaugeRecipient
-    // );
-
-    ILiquidityGaugeFactory _ethereumGaugeFactory = ILiquidityGaugeFactory(
-      0x8f008aF430d589D9f5F09d5c7f38F45E2EdAb4a9
-    );
-
-    IGaugeAdder _gaugeAdder = IGaugeAdder(
-      0xeEeca35ef2B074C97f5DbF22e1fa5BE840B03311
-    );
-
-    // _gaugeAdder.addGaugeFactory(
-    //   _ethereumGaugeFactory,
-    //   IGaugeAdder.GaugeType.Ethereum
-    // );
-
-    {
-      // 0xd92e2e3c13c3712af12e4389ee37b67021318812000200000000000000000002
-      //0xD92e2e3C13c3712Af12E4389ee37b67021318812
-      ILiquidityGauge gauge = ILiquidityGauge(
-        _ethereumGaugeFactory.create(
-          0xD92e2e3C13c3712Af12E4389ee37b67021318812,
-          20000000000000000
-        )
-      );
-
-      _gaugeAdder.addEthereumGauge(IStakingLiquidityGauge(address(gauge)));
-
-      _gauges.push(address(gauge));
-    }
-
-    {
-      // 0x900e9ae430c8f011ab9250c9d4a3a8055ebd3bb8000200000000000000000003
-      //0x900E9Ae430C8F011ab9250C9d4a3a8055EbD3bb8
-      ILiquidityGauge gauge = ILiquidityGauge(
-        _ethereumGaugeFactory.create(
-          0x900E9Ae430C8F011ab9250C9d4a3a8055EbD3bb8,
-          20000000000000000
-        )
-      );
-
-      _gaugeAdder.addEthereumGauge(IStakingLiquidityGauge(address(gauge)));
-
-      _gauges.push(address(gauge));
-    }
-  }
-
-  function _addGauge(
-    ILiquidityGauge gauge,
-    IGaugeAdder.GaugeType gaugeType
-  ) private {
-    IGaugeController _gaugeController = IGaugeController(
-      0x782896795C815d833D1d25C9cAf418AeE57Aa011
-    );
-    _gaugeController.add_gauge(address(gauge), int128(uint128(gaugeType)));
-  }
-
-  function _createSingleRecipientGauge(
-    IGaugeAdder.GaugeType gaugeType,
-    string memory name,
-    address recipient
-  ) private {
-    IBALTokenHolderFactory _balTokenHolderFactory = IBALTokenHolderFactory(
-      0xd2d7F457B9749B6A0A637685A65681F03116125C
-    );
-    ILiquidityGaugeFactory _singleRecipientGaugeFactory = ILiquidityGaugeFactory(
-        0xAB8467D5ba051a761310E6FABC60F00B22f9f2de
-      );
-
-    IBALTokenHolder holder = _balTokenHolderFactory.create(name);
-    ILiquidityGauge gauge = ILiquidityGauge(
-      _singleRecipientGaugeFactory.create(
-        address(holder),
-        20000000000000000,
-        false
-      )
-    );
-    _addGauge(gauge, gaugeType);
-
-    _gauges.push(address(gauge));
   }
 
   function setVault(IVault vault_) public onlyAdmin {
