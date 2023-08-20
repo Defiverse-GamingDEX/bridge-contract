@@ -5,3 +5,5 @@ logs
 public/temp
 public/*
 build
+artifacts
+cache

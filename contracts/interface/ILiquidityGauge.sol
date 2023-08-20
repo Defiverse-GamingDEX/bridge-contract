@@ -50,4 +50,8 @@ interface ILiquidityGauge {
   function getCappedRelativeWeight(
     uint256 time
   ) external view returns (uint256);
+
+  function add_reward(address _reward_token, address _distributor) external;
+
+  function set_reward_distributor(address _reward_token, address _distributor) external;
 }

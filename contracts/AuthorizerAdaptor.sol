@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "./Address.sol";
@@ -12,11 +12,18 @@ import "./interface/ILiquidityGauge.sol";
 import "./interface/IBALTokenHolderFactory.sol";
 import "./interface/ILiquidityGaugeFactory.sol";
 
+//
+// Setup Gauges
+// Ref: https://github.com/balancer/balancer-v2-monorepo/blob/35f610525e9ef2bc0840a55a2cb866bec9e560ae/pkg/governance-scripts/contracts/20220322-veBAL-activation/veBALDeploymentCoordinator.sol
+//
+
 contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
   using Address for address;
 
   bytes32 private _actionIdDisambiguator;
   IVault private _vault;
+
+  address[] private _gauges;
 
   modifier onlyAdmin() {
     require(
@@ -33,6 +40,138 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
     _vault = vault_;
 
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+  }
+
+  function getGauges() public view returns (address[] memory) {
+    return _gauges;
+  }
+
+  function setupReward() public {
+    {
+      ILiquidityGauge gauge = ILiquidityGauge(
+        0x58ddE15d0B9D3b0c5eBcA26484709B64834E7f17
+      );
+      gauge.add_reward(
+        0xA3496414a9900A9AE5960C1fEC30e563213b68bE,
+        0x2109020d301249511F069043263915B51Be279bc
+      );
+    }
+
+    // {
+    //   ILiquidityGauge gauge = ILiquidityGauge(0x63930B109B0277fb93f282748f4dEad7128c0a52);
+    //   gauge.add_reward(0xA3496414a9900A9AE5960C1fEC30e563213b68bE, 0x2109020d301249511F069043263915B51Be279bc);
+    // }
+
+    {
+      ILiquidityGauge gauge = ILiquidityGauge(
+        0x51882a89c9B2044d7D6fc4094F34694e9C91b11F
+      );
+      gauge.add_reward(
+        0xA3496414a9900A9AE5960C1fEC30e563213b68bE,
+        0x2109020d301249511F069043263915B51Be279bc
+      );
+    }
+  }
+
+  function setup(address gaugeController, address veBALGaugeRecipient) public {
+    // IGaugeController(gaugeController).add_type("Liquidity Mining Committee", 0);
+    // IGaugeController(gaugeController).add_type("veBAL", 0);
+    // IGaugeController(gaugeController).add_type("Ethereum", 0);
+
+    // _createSingleRecipientGauge(
+    //   IGaugeAdder.GaugeType.veBAL,
+    //   "Temporary veBAL Liquidity Mining BAL Holder",
+    //   veBALGaugeRecipient
+    // );
+
+    ILiquidityGaugeFactory _ethereumGaugeFactory = ILiquidityGaugeFactory(
+      0x8f008aF430d589D9f5F09d5c7f38F45E2EdAb4a9
+    );
+
+    IGaugeAdder _gaugeAdder = IGaugeAdder(
+      0xeEeca35ef2B074C97f5DbF22e1fa5BE840B03311
+    );
+
+    // _gaugeAdder.addGaugeFactory(
+    //   _ethereumGaugeFactory,
+    //   IGaugeAdder.GaugeType.Ethereum
+    // );
+
+    {
+      // 0xd92e2e3c13c3712af12e4389ee37b67021318812000200000000000000000002
+      //0xD92e2e3C13c3712Af12E4389ee37b67021318812
+      ILiquidityGauge gauge = ILiquidityGauge(
+        _ethereumGaugeFactory.create(
+          0xD92e2e3C13c3712Af12E4389ee37b67021318812,
+          20000000000000000
+        )
+      );
+
+      _gaugeAdder.addEthereumGauge(IStakingLiquidityGauge(address(gauge)));
+
+      _gauges.push(address(gauge));
+    }
+
+    {
+      // 0x900e9ae430c8f011ab9250c9d4a3a8055ebd3bb8000200000000000000000003
+      //0x900E9Ae430C8F011ab9250C9d4a3a8055EbD3bb8
+      ILiquidityGauge gauge = ILiquidityGauge(
+        _ethereumGaugeFactory.create(
+          0x900E9Ae430C8F011ab9250C9d4a3a8055EbD3bb8,
+          20000000000000000
+        )
+      );
+
+      _gaugeAdder.addEthereumGauge(IStakingLiquidityGauge(address(gauge)));
+
+      _gauges.push(address(gauge));
+    }
+  }
+
+  function setupGaugeTypeWeight(address gaugeController) public {
+    IGaugeController(gaugeController).change_type_weight(
+      int128(uint128(IGaugeAdder.GaugeType.veBAL)),
+      20e16
+    ); // 20%
+    IGaugeController(gaugeController).change_type_weight(
+      int128(uint128(IGaugeAdder.GaugeType.Ethereum)),
+      70e16
+    ); // 70%
+  }
+
+  function _addGauge(
+    ILiquidityGauge gauge,
+    IGaugeAdder.GaugeType gaugeType
+  ) private {
+    IGaugeController _gaugeController = IGaugeController(
+      0x782896795C815d833D1d25C9cAf418AeE57Aa011
+    );
+    _gaugeController.add_gauge(address(gauge), int128(uint128(gaugeType)));
+  }
+
+  function _createSingleRecipientGauge(
+    IGaugeAdder.GaugeType gaugeType,
+    string memory name,
+    address recipient
+  ) private {
+    IBALTokenHolderFactory _balTokenHolderFactory = IBALTokenHolderFactory(
+      0xd2d7F457B9749B6A0A637685A65681F03116125C
+    );
+    ILiquidityGaugeFactory _singleRecipientGaugeFactory = ILiquidityGaugeFactory(
+        0xAB8467D5ba051a761310E6FABC60F00B22f9f2de
+      );
+
+    IBALTokenHolder holder = _balTokenHolderFactory.create(name);
+    ILiquidityGauge gauge = ILiquidityGauge(
+      _singleRecipientGaugeFactory.create(
+        address(holder),
+        20000000000000000,
+        false
+      )
+    );
+    _addGauge(gauge, gaugeType);
+
+    _gauges.push(address(gauge));
   }
 
   function setVault(IVault vault_) public onlyAdmin {

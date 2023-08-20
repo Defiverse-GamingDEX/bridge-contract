@@ -32,4 +32,12 @@ contract Authorizer is AccessControlEnumerableUpgradeable {
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setupRole(OPERATOR_ROLE, _msgSender());
   }
+
+  function canPerform(
+    bytes32 actionId,
+    address account,
+    address where
+  ) external view returns (bool) {
+    return true;
+  }
 }

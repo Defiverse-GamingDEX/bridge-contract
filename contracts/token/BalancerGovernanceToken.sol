@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "./SafeMath.sol";
 import "./ERC20Snapshot.sol";
 
-contract BalancerGovernanceToken is
+contract DefiverseGovernanceToken is
   ERC20Snapshot,
   AccessControlEnumerableUpgradeable
 {
@@ -46,9 +46,9 @@ contract BalancerGovernanceToken is
     );
   }
 
-  function grantRole(bytes32 role, address account) public virtual override {
-        _grantRole(role, account);
-    }
+  // function grantRole(bytes32 role, address account) public override {
+  //   _grantRole(role, account);
+  // }
 
   function _chainID() private view returns (uint256) {
     uint256 chainID;

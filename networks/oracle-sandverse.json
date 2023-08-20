@@ -1,0 +1,12 @@
+{
+    "contracts": {
+        "DFProxyAdmin": "0x514B0836BE367C6855A034d1F5139Ed0a5E9190C",
+        "Oracle": {
+            "proxy": "0x4F5988cf418F996c13D4D8c4b0816CE202D57BB2",
+            "impl": "0xEB47269E97EeDB20EF782EB8caFb09ed55b02A39"
+        }
+    },
+    "mapping": {},
+    "roles": {},
+    "config": {}
+}

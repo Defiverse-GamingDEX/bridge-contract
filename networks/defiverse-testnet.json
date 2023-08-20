@@ -1,48 +1,29 @@
 {
     "contracts": {
-        "DFProxyAdmin": "0x753E95C5d9ff5A275548d516bC7cDE64D0a6ACAB",
-        "Multicall2": "0xB4FF7AeCCD6dfC8889e45170Caeb128A298821e2",
-        "MockOAS": {
-            "proxy": "0x7914aA2D50CC4E9B5A6fb6Ac58EC7095927B8897",
-            "impl": "0xc5Ca745724E7b12D35BFA5e4Fa60C08eC0DC3E55"
+        "DFProxyAdmin": "0x514B0836BE367C6855A034d1F5139Ed0a5E9190C",
+        "Multicall2": "0xEB47269E97EeDB20EF782EB8caFb09ed55b02A39",
+        "DefiverseGovernanceToken": {
+            "proxy": "0x54CA0c47Dd122e6189c7ed11a6258B8a700A5A4E",
+            "impl": "0x9461384975E17afAcfEEcb89fE7863ff820c917E"
         },
         "Authorizer": {
-            "proxy": "0xC80f988A4ef2e2570C9b077B635fEF895527178D",
-            "impl": "0xBc6EBeCfF0D09A6F3182f7B0b6ff8368D1C2c5B1"
+            "proxy": "0x6f98E2E87aF546fb90FE761567C30100aB6b965A",
+            "impl": "0x7aAC2e9A930fdDC181BeD63067b34a11096796e2"
         },
         "AuthorizerAdaptor": {
-            "proxy": "0xbec15579c821EA2709AB977034066c5A45F231F3",
-            "impl": "0x3B32dA790B72bbCA90bfBA17E22417Cc5D66255F"
-        },
-        "BalancerGovernanceToken": {
-            "proxy": "0xA3496414a9900A9AE5960C1fEC30e563213b68bE",
-            "impl": "0x2ba9Ac10470A6a88BbAbdF23dE9DF1CFe5137b29"
+            "proxy": "",
+            "impl": ""
         },
         "Oracle": {
-            "proxy": "0xB0A3E83540923ecFfc9a8eE9042F30b6AD4a6B01",
-            "impl": "0xD4FED700ef967dF9b1E469B8F3f753572E8cea89"
+            "proxy": "",
+            "impl": ""
         }
     },
     "mapping": {},
-    "roles": {
-        "BalancerGovernanceToken": {
-            "DEFAULT_ADMIN_ROLE": [
-                "config:BalancerTokenAdmin"
-            ],
-            "MINTER_ROLE": [
-                "config:BalancerTokenAdmin",
-                "0x68C297EDdd953961E81532202e48b048e459c7c3",
-                "0x3Eb5271B14c95dC528b4388E2183d6C8f6Ed6ecb"
-            ],
-            "SNAPSHOT_ROLE": [
-                "config:BalancerTokenAdmin",
-                "0x68C297EDdd953961E81532202e48b048e459c7c3"
-            ]
-        }
-    },
+    "roles": {},
     "config": {
         "admin.address": "0x68C297EDdd953961E81532202e48b048e459c7c3",
-        "vault.address": "0xef570b45a20e9bDe7855BDF5940Be3ac17B4c610",
-        "BalancerTokenAdmin": "0x8573EA9770ED41FEB42fFa023AfbDF5c024F6F20"
+        "vault.address": "",
+        "BalancerTokenAdmin": ""
     }
 }
