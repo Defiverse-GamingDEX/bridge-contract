@@ -2,6 +2,7 @@
     "contracts": {
         "DFProxyAdmin": "0x514B0836BE367C6855A034d1F5139Ed0a5E9190C",
         "Multicall2": "0xEB47269E97EeDB20EF782EB8caFb09ed55b02A39",
+        "WOAS": "0x6B382742b07AAbBA58c38d792B5d7CBAaB246e99",
         "DefiverseGovernanceToken": {
             "proxy": "0x54CA0c47Dd122e6189c7ed11a6258B8a700A5A4E",
             "impl": "0x9461384975E17afAcfEEcb89fE7863ff820c917E"
@@ -11,19 +12,37 @@
             "impl": "0x7aAC2e9A930fdDC181BeD63067b34a11096796e2"
         },
         "AuthorizerAdaptor": {
-            "proxy": "",
-            "impl": ""
+            "proxy": "0x3F9762a94388A87fA5B489D9E486fc78b6B13a77",
+            "impl": "0x34dEBe4554B5E2597F9310E32f04D45c87A19d8d"
         },
         "Oracle": {
-            "proxy": "",
-            "impl": ""
+            "proxy": "0x7Ef735FEC3ff127ebff417BEA8Cf47a69f73F60A",
+            "impl": "0x69aF40110845CeDC1B139A633c20BC4FB3187F11"
         }
     },
     "mapping": {},
-    "roles": {},
+    "roles": {
+        "AuthorizerAdaptor": {
+            "DEFAULT_ADMIN_ROLE": [
+                "0x68C297EDdd953961E81532202e48b048e459c7c3"
+            ]
+        },
+        "DefiverseGovernanceToken": {
+            "DEFAULT_ADMIN_ROLE": [],
+            "MINTER_ROLE": [
+                "config:BalancerTokenAdmin",
+                "0x68C297EDdd953961E81532202e48b048e459c7c3",
+                "0x3Eb5271B14c95dC528b4388E2183d6C8f6Ed6ecb"
+            ],
+            "SNAPSHOT_ROLE": [
+                "config:BalancerTokenAdmin",
+                "0x68C297EDdd953961E81532202e48b048e459c7c3"
+            ]
+        }
+    },
     "config": {
         "admin.address": "0x68C297EDdd953961E81532202e48b048e459c7c3",
-        "vault.address": "",
-        "BalancerTokenAdmin": ""
+        "vault.address": "0x3fb170D197FFA0e79F758d0730efaC41807E4852",
+        "BalancerTokenAdmin": "0x4446474b9cb112158244D880A55bcCf049EbA1Ba"
     }
 }

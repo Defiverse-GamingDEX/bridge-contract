@@ -3,6 +3,57 @@ const chalk = require("cli-color");
 const ContractDeployerWithTruffle = require("@evmchain/contract-deployer/src/truffle");
 const { networks } = require("../truffle-config.js");
 
+const performFirstStage = async (contractDeployer) => {
+  console.log("\n");
+  console.log("======================= performFirstStage");
+
+  let AuthorizerAdaptor = await contractDeployer.loadContract(
+    "AuthorizerAdaptor"
+  );
+
+  let tx = await AuthorizerAdaptor.performFirstStage();
+  console.log("tx:", tx);
+
+  tx = await AuthorizerAdaptor.getGauges();
+  console.log("getGauges:", tx);
+
+  console.log("======================= Done!\n");
+}
+
+const performSecondStage = async (contractDeployer) => {
+  console.log("\n");
+  console.log("======================= performSecondStage");
+
+  let AuthorizerAdaptor = await contractDeployer.loadContract(
+    "AuthorizerAdaptor"
+  ); 
+
+  let tx = await AuthorizerAdaptor.performSecondStage();
+  console.log("tx:", tx);
+
+  tx = await AuthorizerAdaptor.getGauges();
+  console.log("getGauges:", tx);
+
+  console.log("======================= Done!\n");
+}
+
+const performThirdStage = async (contractDeployer) => {
+  console.log("\n");
+  console.log("======================= performThirdStage");
+
+  // let AuthorizerAdaptor = await contractDeployer.loadContract(
+  //   "AuthorizerAdaptor"
+  // ); 
+
+  // let tx = await AuthorizerAdaptor.performSecondStage();
+  // console.log("tx:", tx);
+
+  // tx = await AuthorizerAdaptor.getGauges();
+  // console.log("getGauges:", tx);
+
+  console.log("======================= Done!\n");
+}
+
 const setupGauge = async (contractDeployer) => {
   let AuthorizerAdaptor = await contractDeployer.loadContract(
     "AuthorizerAdaptor"
@@ -71,18 +122,19 @@ module.exports = async function (deployer, network, accounts) {
   await contractDeployer.deployAllManifests({
     args: {
       Multicall2: { initArgs: [] },
-      // DefiverseGovernanceToken: {
+      DefiverseGovernanceToken: {
+        initArgs: ["Defiverse Governance Token", "DFV"],
+      },      
+      // BalancerGovernanceToken: {
       //   initArgs: ["Defiverse Governance Token", "DFV"],
       // },
-      BalancerGovernanceToken: {
-        initArgs: ["Defiverse Governance Token", "DFV"],
-      },
       Authorizer: {
         initArgs: ["config:admin.address"],
       },
       AuthorizerAdaptor: {
-        initArgs: ["config:vault.address"],
+        initArgs: ["config:vault.address"], 
       },
+      WOAS: { initArgs: [] },
       Oracle: {
         initArgs: [],
       },
@@ -96,8 +148,33 @@ module.exports = async function (deployer, network, accounts) {
 
   // await setupGaugeTypeWeight(contractDeployer);
 
-  await setupOracle(contractDeployer);
+  // await setupOracle(contractDeployer);
+
+  // await setupVault(contractDeployer);
+
+  // await setupRole(contractDeployer);
+  // await performFirstStage(contractDeployer);
+  // await performSecondStage(contractDeployer);
+  await performThirdStage(contractDeployer);
 };
+
+const setupRole = async (contractDeployer) => {
+  console.log("\n=======setupRole");
+
+  let contract = await contractDeployer.loadContract("DefiverseGovernanceToken");
+  const rs = await contract.grantRole(await contract.DEFAULT_ADMIN_ROLE(), "0x4446474b9cb112158244D880A55bcCf049EbA1Ba");
+
+  console.log("\n=======setupRole:", rs);
+}
+
+const setupVault = async (contractDeployer) => {
+  console.log("\n=======setupVault");
+
+  let contract = await contractDeployer.loadContract("AuthorizerAdaptor");
+  const rs = await contract.setVault("0x3fb170D197FFA0e79F758d0730efaC41807E4852");
+
+  console.log("\n=======setupVault:", rs);
+}
 
 const setupOracle = async (contractDeployer) => {
   console.log("\n=======setupOracle");

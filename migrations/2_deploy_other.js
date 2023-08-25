@@ -39,9 +39,15 @@ module.exports = async function (deployer) {
 
   // await deployer.deploy(MockERC20, "USDT", "USDT", "10000000000000000000000");
 
-  const contract = await MockERC20.at("0xCC90040a931a8147cc2A4411c68348a5a3a363a0");
-  await contract.mint(
+  // const contract = await MockERC20.at("0xbDfd38435Cf396083CfBf913a8A49284DE70BF6b");
+  // await contract.mint(
+  //   "0x68C297EDdd953961E81532202e48b048e459c7c3",
+  //   "10000000000000000000000000"
+  // );
+
+  const contract2 = await MockERC20.at("0x167F2A85D015C6C7a06CA65230FFaf22d1dceA9f");
+  await contract2.mint(
     "0x68C297EDdd953961E81532202e48b048e459c7c3",
-    "1000000000000000000000000"
+    "10000000000000000000000000"
   );
 };

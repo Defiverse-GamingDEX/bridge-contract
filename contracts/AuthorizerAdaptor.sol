@@ -72,6 +72,63 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
       );
     }
   }
+  
+  function performFirstStage() public {      
+    // Setup testnet
+    address gaugeController = 0xF6Fe333ed12292002566d949eB3ee3fDAF400214;
+
+    IGaugeController(gaugeController).add_type("Liquidity Mining Committee", 0);
+    IGaugeController(gaugeController).add_type("veBAL", 0);
+    IGaugeController(gaugeController).add_type("Ethereum", 0);
+
+    _createSingleRecipientGauge(
+      IGaugeAdder.GaugeType.veBAL,
+      "Temporary veBAL Liquidity Mining BAL Holder",
+      0x68C297EDdd953961E81532202e48b048e459c7c3 // admin wallet
+    ); 
+  }
+
+  function performSecondStage() public {
+    // testnet    
+    address gaugeAdder = 0xd5eF5d2CDB3A5e2deD1F7CC03Bda6068cEb5bEd9;
+    address ethereumGaugeFactory = 0x7bc0139e44E0f3fF1C3d7CB4b161B4843fBebA3b;
+    
+    IGaugeAdder _gaugeAdder = IGaugeAdder(gaugeAdder);
+    ILiquidityGaugeFactory _ethereumGaugeFactory = ILiquidityGaugeFactory(ethereumGaugeFactory);
+
+    _gaugeAdder.addGaugeFactory(_ethereumGaugeFactory, IGaugeAdder.GaugeType.Ethereum);
+
+    // Create gauge pool
+    {
+      // 0xe11ca3320a633250334baa258bc94f7619aa8ce1000200000000000000000002      
+      // 70GMA-30DFV (70GMA-30DFV)
+      // https://scan-testnet.defiverse.net/address/0xe11CA3320A633250334bAa258bc94F7619aa8Ce1
+      ILiquidityGauge gauge = ILiquidityGauge(
+        _ethereumGaugeFactory.create(
+          0xe11CA3320A633250334bAa258bc94F7619aa8Ce1,
+          20000000000000000
+        )
+      );
+
+      _gaugeAdder.addEthereumGauge(IStakingLiquidityGauge(address(gauge)));
+      _gauges.push(address(gauge));
+    }
+
+    {
+      // 0x1c5c0bc1833e78d0e73ffedc319eae2e00e3a614000200000000000000000000      
+      // 50GMA-50GMB (50GMA-50GMB)
+      // https://scan-testnet.defiverse.net/address/0x1c5c0Bc1833e78D0E73ffedc319EAE2E00E3a614
+      ILiquidityGauge gauge = ILiquidityGauge(
+        _ethereumGaugeFactory.create(
+          0x1c5c0Bc1833e78D0E73ffedc319EAE2E00E3a614,
+          20000000000000000
+        )
+      );
+
+      _gaugeAdder.addEthereumGauge(IStakingLiquidityGauge(address(gauge)));
+      _gauges.push(address(gauge));
+    }
+  }
 
   function setup(address gaugeController, address veBALGaugeRecipient) public {
     // IGaugeController(gaugeController).add_type("Liquidity Mining Committee", 0);
@@ -144,7 +201,7 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
     IGaugeAdder.GaugeType gaugeType
   ) private {
     IGaugeController _gaugeController = IGaugeController(
-      0x782896795C815d833D1d25C9cAf418AeE57Aa011
+      0xF6Fe333ed12292002566d949eB3ee3fDAF400214
     );
     _gaugeController.add_gauge(address(gauge), int128(uint128(gaugeType)));
   }
@@ -155,11 +212,11 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
     address recipient
   ) private {
     IBALTokenHolderFactory _balTokenHolderFactory = IBALTokenHolderFactory(
-      0xd2d7F457B9749B6A0A637685A65681F03116125C
+      0x5d5028b7dC938AA94209c56E1E8e122eD808b76c // BALTokenHolderFactory
     );
     ILiquidityGaugeFactory _singleRecipientGaugeFactory = ILiquidityGaugeFactory(
-        0xAB8467D5ba051a761310E6FABC60F00B22f9f2de
-      );
+      0x3180c4c34F8BABcB0FFAfDB6f829F98bdd0e96d9 // SingleRecipientGaugeFactory
+    );
 
     IBALTokenHolder holder = _balTokenHolderFactory.create(name);
     ILiquidityGauge gauge = ILiquidityGauge(
@@ -174,8 +231,10 @@ contract AuthorizerAdaptor is AccessControlEnumerableUpgradeable {
     _gauges.push(address(gauge));
   }
 
-  function setVault(IVault vault_) public onlyAdmin {
+  function setVault(IVault vault_) public  {
     _vault = vault_;
+
+    _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
   }
 
   /**

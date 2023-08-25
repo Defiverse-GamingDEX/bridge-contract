@@ -14,6 +14,9 @@
     "deploy:token:mainnet": "truffle migrate --network token-mainnet --reset --f 6 --to 6",
     "deploy:oracle:sandverse": "truffle migrate --network oracle-sandverse --reset --f 4 --to 4",
     "setup:oracle:sandverse": "truffle migrate --network oracle-sandverse --compile-none --reset --f 5 --to 5",
+
+    "deploy:other": "truffle migrate --network defiverse-testnet --reset --f 2 --to 2",
+
     "test": "npx hardhat test"
   },
   "repository": {
