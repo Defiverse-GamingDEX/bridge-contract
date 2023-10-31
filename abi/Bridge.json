@@ -16,6 +16,68 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "transferId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "srcChainId",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "srcTransferId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Relay",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "bytes32",
         "name": "role",
@@ -91,62 +153,13 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
       }
     ],
-    "name": "TokenEarned",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "TokenSold",
+    "name": "Unpaused",
     "type": "event"
   },
   {
@@ -160,8 +173,20 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "L2_STANDARD_BRIDGE",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -174,8 +199,33 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "OVM_OAS",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "PAUSER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -194,8 +244,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -219,8 +268,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -239,8 +287,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -282,8 +329,20 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -338,11 +397,21 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "oas_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "l2Bridge_",
+        "type": "address"
+      }
+    ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -351,63 +420,17 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "addProtectedToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "removeProtectedToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "isProtectedToken",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr_",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
       },
       {
-        "internalType": "bool",
-        "name": "isWhitelist_",
-        "type": "bool"
+        "internalType": "address",
+        "name": "bridge",
+        "type": "address"
       }
     ],
-    "name": "setWhitelist",
+    "name": "setVerseBridge",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -416,55 +439,95 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "addr_",
+        "name": "cbridge",
         "type": "address"
       }
     ],
-    "name": "isWhitelisted",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "name": "setCBridge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [],
-    "name": "getProtectedTokens",
-    "outputs": [
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unpause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "receiver",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "srcToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "dstToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "hubToken",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "srcChainId",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "dstChainId",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "srcTransferId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Bridge.RelayRequest",
+        "name": "_relayRequest",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "_sigs",
+        "type": "bytes[]"
+      },
       {
         "internalType": "address[]",
-        "name": "",
+        "name": "_signers",
         "type": "address[]"
       }
     ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount_",
-        "type": "uint256"
-      }
-    ],
-    "name": "updateEarn",
+    "name": "relayExternalRequest",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -472,99 +535,71 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "user_",
-        "type": "address"
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "receiver",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "srcToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "dstToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "hubToken",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "srcChainId",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "dstChainId",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "srcTransferId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Bridge.RelayRequest",
+        "name": "_relayRequest",
+        "type": "tuple"
       },
       {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
+        "internalType": "bytes[]",
+        "name": "_sigs",
+        "type": "bytes[]"
       },
       {
-        "internalType": "uint256",
-        "name": "amount_",
-        "type": "uint256"
+        "internalType": "address[]",
+        "name": "_signers",
+        "type": "address[]"
       }
     ],
-    "name": "updateSold",
+    "name": "relayVerseRequest",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "getSellable",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "getTotalEarn",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "user_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token_",
-        "type": "address"
-      }
-    ],
-    "name": "getTotalSold",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
   }
 ]

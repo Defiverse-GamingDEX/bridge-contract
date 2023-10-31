@@ -20,7 +20,7 @@
         },
         "Oracle": {
             "proxy": "0xB0A3E83540923ecFfc9a8eE9042F30b6AD4a6B01",
-            "impl": "0x4507EbA2b407177bb4e9379AF2e89D58fa18B356"
+            "impl": "0x3Da4be4e78e3E61f91047917f87D12F5Ff79ebb5"
         }
     },
     "mapping": {},

@@ -1,39 +1,4 @@
-require("dotenv").config();
-
-const HDWalletProvider = require("@truffle/hdwallet-provider");
-
-const WALLET_TESTNET = process.env.DEPLOY_PRIVATE_KEY_TESTNET;
-const WALLET_MAINNET = process.env.DEPLOY_PRIVATE_KEY_TESTNET;
-
-const providerDefiVerseMainnet = new HDWalletProvider(
-  [WALLET_MAINNET],
-  "https://rpc.defiverse.net",
-  0,
-  1,
-  true,
-  "m/44'/60'/0'/0/",
-  16116
-);
-
-const providerDefiVerseDev = new HDWalletProvider(
-  [WALLET_TESTNET],
-  "https://rpc-testnet.defiverse.net",
-  0,
-  1,
-  true,
-  "m/44'/60'/0'/0/",
-  17117
-);
-
-const providerSandVerse = new HDWalletProvider(
-  WALLET_TESTNET,
-  "https://rpc.sandverse.oasys.games/",
-  0,
-  1,
-  true,
-  "m/44'/60'/0'/0/",
-  20197
-);
+const providers = require("./providers");
 
 module.exports = {
   networks: {
@@ -43,35 +8,50 @@ module.exports = {
     //   network_id: "*",
     // },
     "token-testnet": {
-      provider: providerDefiVerseDev,
+      provider: providers.defiverse.testnet,
       network_id: "*",
       timeoutBlocks: 40000,
       confirmations: 0,
       skipDryRun: true,
     },
     "defiverse-testnet": {
-      provider: providerDefiVerseDev,
+      provider: providers.defiverse.testnet,
       network_id: "*",
       timeoutBlocks: 40000,
       confirmations: 0,
       skipDryRun: true,
-      gas: 0,
+      gasPrice: 60000000000,
     },
     "defiverse-mainnet": {
-      provider: providerDefiVerseMainnet,
+      provider: providers.defiverse.mainnet,
       network_id: "*",
       timeoutBlocks: 40000,
       confirmations: 0,
       skipDryRun: true,
-      gas: 20000000,
-      gasPrice: 2000000000000,
+      gasPrice: 5000000000000,
     },
     "oracle-sandverse": {
-      provider: providerSandVerse,
+      provider: providers.sandverse.testnet,
       network_id: 20197,
       timeoutBlocks: 40000,
       confirmations: 0,
       skipDryRun: true,
+    },
+    "bridge-oasys-mainnet": {
+      provider: providers.oasys.mainnet,
+      network_id: "*",
+      timeoutBlocks: 40000,
+      confirmations: 0,
+      skipDryRun: true,
+      gasPrice: 0,
+    },
+    "bridge-oasys-testnet": {
+      provider: providers.oasys.testnet,
+      network_id: "*",
+      timeoutBlocks: 40000,
+      confirmations: 0,
+      skipDryRun: true,
+      gasPrice: 0,
     },
   },
 

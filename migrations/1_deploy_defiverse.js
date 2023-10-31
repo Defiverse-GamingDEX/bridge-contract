@@ -18,7 +18,7 @@ const performFirstStage = async (contractDeployer) => {
   console.log("getGauges:", tx);
 
   console.log("======================= Done!\n");
-}
+};
 
 const performSecondStage = async (contractDeployer) => {
   console.log("\n");
@@ -26,7 +26,7 @@ const performSecondStage = async (contractDeployer) => {
 
   let AuthorizerAdaptor = await contractDeployer.loadContract(
     "AuthorizerAdaptor"
-  ); 
+  );
 
   let tx = await AuthorizerAdaptor.performSecondStage();
   console.log("tx:", tx);
@@ -35,7 +35,7 @@ const performSecondStage = async (contractDeployer) => {
   console.log("getGauges:", tx);
 
   console.log("======================= Done!\n");
-}
+};
 
 const performThirdStage = async (contractDeployer) => {
   console.log("\n");
@@ -43,7 +43,7 @@ const performThirdStage = async (contractDeployer) => {
 
   // let AuthorizerAdaptor = await contractDeployer.loadContract(
   //   "AuthorizerAdaptor"
-  // ); 
+  // );
 
   // let tx = await AuthorizerAdaptor.performSecondStage();
   // console.log("tx:", tx);
@@ -52,7 +52,7 @@ const performThirdStage = async (contractDeployer) => {
   // console.log("getGauges:", tx);
 
   console.log("======================= Done!\n");
-}
+};
 
 const setupGauge = async (contractDeployer) => {
   let AuthorizerAdaptor = await contractDeployer.loadContract(
@@ -124,7 +124,7 @@ module.exports = async function (deployer, network, accounts) {
       Multicall2: { initArgs: [] },
       DefiverseGovernanceToken: {
         initArgs: ["Defiverse Governance Token", "DFV"],
-      },      
+      },
       // BalancerGovernanceToken: {
       //   initArgs: ["Defiverse Governance Token", "DFV"],
       // },
@@ -132,7 +132,7 @@ module.exports = async function (deployer, network, accounts) {
         initArgs: ["config:admin.address"],
       },
       AuthorizerAdaptor: {
-        initArgs: ["config:vault.address"], 
+        initArgs: ["config:vault.address"],
       },
       WOAS: { initArgs: [] },
       Oracle: {
@@ -149,32 +149,52 @@ module.exports = async function (deployer, network, accounts) {
   // await setupGaugeTypeWeight(contractDeployer);
 
   // await setupOracle(contractDeployer);
-
+  // await whitelistOracle(contractDeployer);
+  
   // await setupVault(contractDeployer);
 
   // await setupRole(contractDeployer);
   // await performFirstStage(contractDeployer);
   // await performSecondStage(contractDeployer);
-  await performThirdStage(contractDeployer);
+  // await performThirdStage(contractDeployer);
 };
 
 const setupRole = async (contractDeployer) => {
   console.log("\n=======setupRole");
 
-  let contract = await contractDeployer.loadContract("DefiverseGovernanceToken");
-  const rs = await contract.grantRole(await contract.DEFAULT_ADMIN_ROLE(), "0x4446474b9cb112158244D880A55bcCf049EbA1Ba");
+  let contract = await contractDeployer.loadContract(
+    "DefiverseGovernanceToken"
+  );
+  const rs = await contract.grantRole(
+    await contract.DEFAULT_ADMIN_ROLE(),
+    "0x4446474b9cb112158244D880A55bcCf049EbA1Ba"
+  );
 
   console.log("\n=======setupRole:", rs);
-}
+};
 
 const setupVault = async (contractDeployer) => {
   console.log("\n=======setupVault");
 
   let contract = await contractDeployer.loadContract("AuthorizerAdaptor");
-  const rs = await contract.setVault("0x3fb170D197FFA0e79F758d0730efaC41807E4852");
+  const rs = await contract.setVault(
+    "0x3fb170D197FFA0e79F758d0730efaC41807E4852"
+  );
 
   console.log("\n=======setupVault:", rs);
-}
+};
+
+const whitelistOracle = async (contractDeployer) => {
+  console.log("\n=======whitelistOracle");
+  let tx = null;
+
+  let contract = await contractDeployer.loadContract("Oracle");
+  tx = await contract.setWhitelist(
+    "0xFdbDeb40F8E733a2453b68Eb911A2Ad48caC91a3",
+    true
+  );
+  console.log("==setWhitelist:", tx);
+};
 
 const setupOracle = async (contractDeployer) => {
   console.log("\n=======setupOracle");

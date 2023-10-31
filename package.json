@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "develop": "truffle develop",
-    "compile": "truffle compile",
+    "compile": "truffle compile && node ./scripts/exportAbi",
     "deploy": "truffle migrate --network defiverse-testnet --reset --f 1 --to 1",
     "deploy:defiverse:testnet": "truffle migrate --network defiverse-testnet --reset --f 1 --to 1",
     "deploy:defiverse:mainnet": "truffle migrate --network defiverse-mainnet --reset --f 1 --to 1",
@@ -13,10 +13,10 @@
     "deploy:token:testnet": "truffle migrate --network token-testnet --reset --f 6 --to 6",
     "deploy:token:mainnet": "truffle migrate --network token-mainnet --reset --f 6 --to 6",
     "deploy:oracle:sandverse": "truffle migrate --network oracle-sandverse --reset --f 4 --to 4",
-    "setup:oracle:sandverse": "truffle migrate --network oracle-sandverse --compile-none --reset --f 5 --to 5",
-
+    "setup:oracle:sandverse": "truffle migrate --network oracle-sandverse --compile-none --reset --f 5 --to 5",    
     "deploy:other": "truffle migrate --network defiverse-testnet --reset --f 2 --to 2",
-
+    "deploy-bridge:oasys:mainnet": "truffle migrate --network bridge-oasys-mainnet --reset --f 7 --to 7",
+    "deploy-bridge:oasys:testnet": "truffle migrate --network bridge-oasys-testnet --reset --f 7 --to 7",
     "test": "npx hardhat test"
   },
   "repository": {
