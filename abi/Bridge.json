@@ -4,6 +4,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "AddSigner",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint8",
         "name": "version",
         "type": "uint8"
@@ -72,6 +85,19 @@
       }
     ],
     "name": "Relay",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "RevokeSigner",
     "type": "event"
   },
   {
@@ -217,6 +243,19 @@
   {
     "inputs": [],
     "name": "PAUSER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SIGNER_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -420,6 +459,90 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "addSigner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "revokeSigner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "min",
+        "type": "uint32"
+      }
+    ],
+    "name": "setMinSigner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMinSigner",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSignerCount",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "signer",
+        "type": "address"
+      }
+    ],
+    "name": "isSignerExists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "chainId",
         "type": "uint256"
@@ -513,17 +636,17 @@
           }
         ],
         "internalType": "struct Bridge.RelayRequest",
-        "name": "_relayRequest",
+        "name": "relayRequest_",
         "type": "tuple"
       },
       {
         "internalType": "bytes[]",
-        "name": "_sigs",
+        "name": "sigs_",
         "type": "bytes[]"
       },
       {
         "internalType": "address[]",
-        "name": "_signers",
+        "name": "signers_",
         "type": "address[]"
       }
     ],
@@ -583,17 +706,17 @@
           }
         ],
         "internalType": "struct Bridge.RelayRequest",
-        "name": "_relayRequest",
+        "name": "relayRequest_",
         "type": "tuple"
       },
       {
         "internalType": "bytes[]",
-        "name": "_sigs",
+        "name": "sigs_",
         "type": "bytes[]"
       },
       {
         "internalType": "address[]",
-        "name": "_signers",
+        "name": "signers_",
         "type": "address[]"
       }
     ],

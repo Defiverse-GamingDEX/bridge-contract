@@ -12,8 +12,13 @@ import "../interface/IL2StandardERC20.sol";
 contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
     using Signature for bytes32;
 
+    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    event AddSigner(address signer);
+
+    event RevokeSigner(address signer);
 
     event Relay(
         bytes32 transferId,
@@ -36,6 +41,10 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         uint64 dstChainId;
         bytes32 srcTransferId;
     }
+
+    uint32 private _minSigner;
+    uint32 private _signerCount;
+    mapping(address => bool) private _signers;
 
     address public OVM_OAS;
     address public L2_STANDARD_BRIDGE;
@@ -75,12 +84,45 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         __Pausable_init();
         __AccessControlEnumerable_init();
 
+        _minSigner = 3;
         OVM_OAS = oas_;
         L2_STANDARD_BRIDGE = l2Bridge_;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OPERATOR_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    function addSigner(address signer) public onlyAdmin {
+        require(!_signers[signer], "Bridge: signer is existed!");
+        _signers[signer] = true;
+        _setupRole(SIGNER_ROLE, signer);
+        _signerCount += 1;
+        emit AddSigner(signer);
+    }
+
+    function revokeSigner(address signer) public onlyAdmin {
+        require(_signers[signer], "Bridge: signer is not existed!");
+        revokeRole(SIGNER_ROLE, signer);
+        _signers[signer] = false;
+        _signerCount -= 1;
+        emit RevokeSigner(signer);
+    }
+
+    function setMinSigner(uint32 min) public onlyAdmin {
+        _minSigner = min;
+    }
+
+    function getMinSigner() public view returns (uint32) {
+        return _minSigner;
+    }
+
+    function getSignerCount() public view returns (uint32) {
+        return _signerCount;
+    }
+
+    function isSignerExists(address signer) public view returns (bool) {
+        return _signers[signer];
     }
 
     function _setVerseBridge(uint256 chainId, address bridge) internal {
@@ -111,115 +153,117 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
     }
 
     function _verifySigs(
-        bytes memory _msg,
-        bytes[] calldata _sigs,
-        address[] calldata _signers
-    ) internal pure {
-        bytes32 hashMessage = keccak256(_msg).prefixed();
-        for (uint256 i = 0; i < _sigs.length; i++) {
+        bytes memory msg_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) internal view {
+        require(signers_.length >= _minSigner, "Bridge: not enough signers");
+
+        bytes32 message = keccak256(msg_).prefixed();
+        for (uint256 i = 0; i < sigs_.length; i++) {
+            address signer = message.recoverSigner(sigs_[i]);
             require(
-                hashMessage.recoverSigner(_sigs[i]) == _signers[i],
-                "invalid signer"
+                _signers[signer] && signer == signers_[i],
+                "Bridge: invalid signature"
             );
         }
     }
 
     function relayExternalRequest(
-        RelayRequest calldata _relayRequest,
-        bytes[] calldata _sigs,
-        address[] calldata _signers
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
     ) external whenNotPaused {
         bytes32 domain = keccak256(
             abi.encodePacked(block.chainid, address(this), "Relay")
         );
         _verifySigs(
-            abi.encodePacked(domain, abi.encode(_relayRequest)),
-            _sigs,
-            _signers
+            abi.encodePacked(domain, abi.encode(relayRequest_)),
+            sigs_,
+            signers_
         );
 
         bytes32 transferId = keccak256(
             abi.encodePacked(
-                _relayRequest.sender,
-                _relayRequest.receiver,
-                _relayRequest.srcToken,
-                _relayRequest.dstToken,
-                _relayRequest.hubToken,
-                _relayRequest.amount,
-                _relayRequest.srcChainId,
-                _relayRequest.dstChainId,
-                _relayRequest.srcTransferId
+                relayRequest_.sender,
+                relayRequest_.receiver,
+                relayRequest_.srcToken,
+                relayRequest_.dstToken,
+                relayRequest_.hubToken,
+                relayRequest_.amount,
+                relayRequest_.srcChainId,
+                relayRequest_.dstChainId,
+                relayRequest_.srcTransferId
             )
         );
 
         _cbridge.send(
-            _relayRequest.receiver,
-            _relayRequest.hubToken,
-            _relayRequest.amount,
-            _relayRequest.dstChainId,
+            relayRequest_.receiver,
+            relayRequest_.hubToken,
+            relayRequest_.amount,
+            relayRequest_.dstChainId,
             uint64(uint256(transferId)),
             780
         );
 
         emit Relay(
             transferId,
-            _relayRequest.sender,
-            _relayRequest.receiver,
-            _relayRequest.dstToken,
-            _relayRequest.amount,
-            _relayRequest.srcChainId,
+            relayRequest_.sender,
+            relayRequest_.receiver,
+            relayRequest_.dstToken,
+            relayRequest_.amount,
+            relayRequest_.srcChainId,
             transferId
         );
     }
 
     function relayVerseRequest(
-        RelayRequest calldata _relayRequest,
-        bytes[] calldata _sigs,
-        address[] calldata _signers
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
     ) external whenNotPaused {
         bytes32 domain = keccak256(
             abi.encodePacked(block.chainid, address(this), "Relay")
         );
         _verifySigs(
-            abi.encodePacked(domain, abi.encode(_relayRequest)),
-            _sigs,
-            _signers
+            abi.encodePacked(domain, abi.encode(relayRequest_)),
+            sigs_,
+            signers_
         );
-
-        IL1StandardBridge bridge = _verseBridge[_relayRequest.dstChainId];
 
         bytes32 transferId = keccak256(
             abi.encodePacked(
-                _relayRequest.sender,
-                _relayRequest.receiver,
-                _relayRequest.srcToken,
-                _relayRequest.dstToken,
-                _relayRequest.hubToken,
-                _relayRequest.amount,
-                _relayRequest.srcChainId,
-                _relayRequest.dstChainId,
-                _relayRequest.srcTransferId
+                relayRequest_.sender,
+                relayRequest_.receiver,
+                relayRequest_.srcToken,
+                relayRequest_.dstToken,
+                relayRequest_.hubToken,
+                relayRequest_.amount,
+                relayRequest_.srcChainId,
+                relayRequest_.dstChainId,
+                relayRequest_.srcTransferId
             )
         );
         require(_transfers[transferId] == false, "Bridge: transfer exists");
         _transfers[transferId] = true;
 
-        if (_relayRequest.srcToken == OVM_OAS) {
-            bridge.depositETHTo{value: _relayRequest.amount}(
-                _relayRequest.receiver,
+        IL1StandardBridge bridge = _verseBridge[relayRequest_.dstChainId];
+        if (relayRequest_.srcToken == OVM_OAS) {
+            bridge.depositETHTo{value: relayRequest_.amount}(
+                relayRequest_.receiver,
                 2_000_000,
                 "0x"
             );
         } else {
-            IERC20(_relayRequest.hubToken).approve(
+            IERC20(relayRequest_.hubToken).approve(
                 address(bridge),
-                _relayRequest.amount
+                relayRequest_.amount
             );
             bridge.depositERC20To(
-                _relayRequest.hubToken,
-                _relayRequest.dstToken,
-                _relayRequest.receiver,
-                _relayRequest.amount,
+                relayRequest_.hubToken,
+                relayRequest_.dstToken,
+                relayRequest_.receiver,
+                relayRequest_.amount,
                 2_000_000,
                 "0x"
             );
@@ -227,11 +271,11 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
 
         emit Relay(
             transferId,
-            _relayRequest.sender,
-            _relayRequest.receiver,
-            _relayRequest.dstToken,
-            _relayRequest.amount,
-            _relayRequest.srcChainId,
+            relayRequest_.sender,
+            relayRequest_.receiver,
+            relayRequest_.dstToken,
+            relayRequest_.amount,
+            relayRequest_.srcChainId,
             transferId
         );
     }
