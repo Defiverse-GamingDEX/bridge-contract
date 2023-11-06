@@ -230,6 +230,10 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
             )
         );
         require(_transfers[transferId] == false, "Bridge: transfer exists");
+        require(
+            address(_cbridge) != address(0),
+            "Bridge: destination chain does not supported"
+        );
 
         transferId.verifySignatures(sigs_, signers_);
 
@@ -298,13 +302,18 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         require(_transfers[transferId] == false, "Bridge: transfer exists");
         transferId.verifySignatures(sigs_, signers_);
 
+        IL1StandardBridge bridge = _verseBridge[relayRequest_.dstChainId];
+        require(
+            address(bridge) != address(0),
+            "Bridge: destination chain does not supported"
+        );
+
         (uint256 amountOut, uint256 fee) = _calculateFee(
             relayRequest_.token,
             relayRequest_.dstChainId,
             relayRequest_.amount
         );
 
-        IL1StandardBridge bridge = _verseBridge[relayRequest_.dstChainId];
         if (relayRequest_.token == OVM_OAS) {
             bridge.depositETHTo{value: amountOut}(
                 relayRequest_.receiver,
