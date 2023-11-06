@@ -2,18 +2,6 @@ const providers = require("./providers");
 
 module.exports = {
   networks: {
-    // development: {
-    //   host: "127.0.0.1",
-    //   port: 9545,
-    //   network_id: "*",
-    // },
-    "token-testnet": {
-      provider: providers.defiverse.testnet,
-      network_id: "*",
-      timeoutBlocks: 40000,
-      confirmations: 0,
-      skipDryRun: true,
-    },
     "defiverse-testnet": {
       provider: providers.defiverse.testnet,
       network_id: "*",
@@ -30,14 +18,7 @@ module.exports = {
       skipDryRun: true,
       gasPrice: 5000000000000,
     },
-    "oracle-sandverse": {
-      provider: providers.sandverse.testnet,
-      network_id: 20197,
-      timeoutBlocks: 40000,
-      confirmations: 0,
-      skipDryRun: true,
-    },
-    "bridge-oasys-mainnet": {
+    "oasys-mainnet": {
       provider: providers.oasys.mainnet,
       network_id: "*",
       timeoutBlocks: 40000,
@@ -45,7 +26,7 @@ module.exports = {
       skipDryRun: true,
       gasPrice: 0,
     },
-    "bridge-oasys-testnet": {
+    "oasys-testnet": {
       provider: providers.oasys.testnet,
       network_id: "*",
       timeoutBlocks: 40000,

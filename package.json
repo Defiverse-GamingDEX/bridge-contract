@@ -1,12 +1,12 @@
 {
-  "name": "defiverse-smart-contracts",
+  "name": "bridge-smart-contracts",
   "version": "1.0.0",
   "description": "",
   "scripts": {
     "develop": "truffle develop",
-    "compile": "truffle compile && node ./scripts/exportAbi",    
-    "deploy-bridge:oasys:mainnet": "truffle migrate --network bridge-oasys-mainnet --reset --f 7 --to 7",
-    "deploy-bridge:oasys:testnet": "truffle migrate --network bridge-oasys-testnet --reset --f 7 --to 7",
+    "compile": "truffle compile && node ./scripts/exportAbi",
+    "deploy:oasys:mainnet": "truffle migrate --network oasys-mainnet --reset --f 1 --to 1",
+    "deploy:oasys:testnet": "truffle migrate --network oasys-testnet --reset --f 1 --to 1",
     "test": "npx hardhat test"
   },
   "repository": {

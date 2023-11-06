@@ -28,7 +28,7 @@ const providers = {
   },
   oasys: {
     mainnet: new HDWalletProvider(
-      WALLET_TESTNET,
+      WALLET_MAINNET,
       `https://rpc.mainnet.oasys.games/`,
       0,
       1,
@@ -48,7 +48,7 @@ const providers = {
   },
   tcgverse: {
     mainnet: new HDWalletProvider(
-      WALLET_TESTNET,
+      WALLET_MAINNET,
       `https://rpc.tcgverse.xyz/`,
       0,
       1,

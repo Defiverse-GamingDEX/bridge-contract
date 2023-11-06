@@ -2,13 +2,14 @@
     "contracts": {
         "DFProxyAdmin": "0x03db44993f22aae59430288c957Cc2C63cD069F0",
         "Bridge": {
-            "proxy": "0x7dE829Db3F17517C0671A2fB8ccbbc7337587bB5",
-            "impl": "0x502400169719A9Fe71a662cB1DF5e1B9c054b5aF"
+            "proxy": "0xfe32B19A6e2e8b9D2F55d1D5DB24A53c03e10E6c",
+            "impl": "0x5e2E9c40586DF0010EaBd9fE0A32621aAc10d04E"
         }
     },
     "mapping": {},
     "roles": {},
     "config": {
+        "fee-receiver.address": "0x68C297EDdd953961E81532202e48b048e459c7c3",
         "oasys.oas": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
         "oasys.l2-bridge.address": "0x4200000000000000000000000000000000000010",
         "oasys.l1-bridge.id": [
