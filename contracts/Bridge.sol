@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./lib/Signature.sol";
+import "./interface/IBridge.sol";
 import "./interface/ICBridge.sol";
 import "./interface/IL1StandardBridge.sol";
 import "./interface/IL2StandardERC20.sol";
 
-contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
+contract Bridge is
+    IBridge,
+    PausableUpgradeable,
+    AccessControlEnumerableUpgradeable
+{
     using Signature for bytes32;
+    using SafeERC20 for IERC20;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -18,32 +25,7 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
 
     uint256 public constant A_HUNDRED_PERCENT = 10_000; // 100%
 
-    event AddSigner(address signer);
-
-    event RevokeSigner(address signer);
-
-    event Relay(
-        bytes32 transferId,
-        address receiver,
-        address token,
-        uint256 amountOut,
-        bytes32 srcTransferId
-    );
-
-    struct RelayRequest {
-        address sender;
-        address receiver;
-        address token; // Layer 1 token
-        address l2Token; // Layer 2 token, address(0) if external chain
-        uint256 amount;
-        uint64 srcChainId;
-        uint64 dstChainId;
-        bytes32 srcTransferId;
-    }
-
-    uint32 private _minSigner;
-    uint32 private _signerCount;
-    mapping(address => bool) private _signers;
+    uint256 private _minSigner;
 
     address public OVM_OAS;
     address public L2_STANDARD_BRIDGE;
@@ -115,42 +97,44 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
 
     receive() external payable {}
 
-    function addSigner(address signer) external onlyAdmin {
-        require(!_signers[signer], "Bridge: signer is existed!");
-        _signers[signer] = true;
+    function addSigner(address signer) external override onlyAdmin {
+        require(!hasRole(SIGNER_ROLE, signer), "Bridge: signer is existed!");
         _setupRole(SIGNER_ROLE, signer);
-        _signerCount += 1;
         emit AddSigner(signer);
     }
 
-    function revokeSigner(address signer) external onlyAdmin {
-        require(_signers[signer], "Bridge: signer is not existed!");
+    function revokeSigner(address signer) external override onlyAdmin {
+        require(hasRole(SIGNER_ROLE, signer), "Bridge: signer is not existed!");
         revokeRole(SIGNER_ROLE, signer);
-        _signers[signer] = false;
-        _signerCount -= 1;
         emit RevokeSigner(signer);
     }
 
-    function setMinSigner(uint32 min) external onlyAdmin {
+    function setMinSigner(uint256 min) external override onlyAdmin {
+        require(
+            min > 0 && min <= getRoleMemberCount(SIGNER_ROLE),
+            "Bridge: value must greater than zero and less than or equal to signer count"
+        );
         _minSigner = min;
     }
 
-    function getMinSigner() external view returns (uint32) {
+    function getMinSigner() external view override returns (uint256) {
         return _minSigner;
     }
 
-    function getSignerCount() external view returns (uint32) {
-        return _signerCount;
+    function getSignerCount() external view override returns (uint256) {
+        return getRoleMemberCount(SIGNER_ROLE);
     }
 
-    function isSignerExists(address signer) external view returns (bool) {
-        return _signers[signer];
+    function isSignerExists(
+        address signer
+    ) external view override returns (bool) {
+        return hasRole(SIGNER_ROLE, signer);
     }
 
     function getSwapFeeRate(
         address token,
         uint256 chainId
-    ) external view returns (uint256) {
+    ) external view override returns (uint256) {
         return _swapFeeRate[token][chainId];
     }
 
@@ -158,14 +142,14 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         address token,
         uint256 chainId,
         uint256 feeRate
-    ) external onlyAdmin {
+    ) external override onlyOperator {
         _swapFeeRate[token][chainId] = feeRate;
     }
 
     function getBaseFee(
         address token,
         uint256 chainId
-    ) external view returns (uint256) {
+    ) external view override returns (uint256) {
         return _baseFee[token][chainId];
     }
 
@@ -173,15 +157,15 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         address token,
         uint256 chainId,
         uint256 fee
-    ) external onlyAdmin {
+    ) external override onlyOperator {
         _baseFee[token][chainId] = fee;
     }
 
-    function setFeeReceiver(address addr) external onlyAdmin {
+    function setFeeReceiver(address addr) external override onlyAdmin {
         _feeReceiver = addr;
     }
 
-    function getFeeReceiver() external view returns (address) {
+    function getFeeReceiver() external view override returns (address) {
         return _feeReceiver;
     }
 
@@ -192,7 +176,7 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
     function setVerseBridge(
         uint256 chainId,
         address bridge
-    ) external onlyAdmin {
+    ) external override onlyAdmin {
         _setVerseBridge(chainId, bridge);
     }
 
@@ -200,56 +184,87 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         _cbridge = ICBridge(cbridge);
     }
 
-    function setCBridge(address cbridge) external onlyAdmin {
+    function setCBridge(address cbridge) external override onlyAdmin {
         _setCBridge(cbridge);
     }
 
-    function pause() external onlyPauser {
+    function pause() external override onlyPauser {
         _pause();
     }
 
-    function unpause() external onlyPauser {
+    function unpause() external override onlyPauser {
         _unpause();
+    }
+
+    function _getTransferId(
+        RelayRequest memory relayRequest_
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    relayRequest_.sender,
+                    relayRequest_.receiver,
+                    relayRequest_.token,
+                    relayRequest_.l2Token,
+                    relayRequest_.amount,
+                    relayRequest_.srcChainId,
+                    relayRequest_.dstChainId,
+                    relayRequest_.srcTransferId
+                )
+            );
+    }
+
+    function _verifyRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) internal view returns (bytes32) {
+        require(sigs_.length >= _minSigner, "Bridge: not meet threshold");
+
+        for (uint i = 0; i < signers_.length; i++) {
+            require(hasRole(SIGNER_ROLE, signers_[i]), "INVALID_SIGNER");
+
+            // Check duplicate signer
+            for (uint j = i + 1; j < signers_.length; j++) {
+                if (signers_[i] == signers_[j]) {
+                    revert("Bridge: duplicate signer");
+                }
+            }
+        }
+
+        bytes32 transferId = _getTransferId(relayRequest_);
+        require(_transfers[transferId] == false, "Bridge: transfer exists");
+        transferId.verifySignatures(sigs_, signers_);
+
+        return transferId;
     }
 
     function relayExternalRequest(
         RelayRequest calldata relayRequest_,
+        uint32 maxSlippage_,
         bytes[] calldata sigs_,
         address[] calldata signers_
-    ) external onlyOperator onlySigners(signers_) whenNotPaused {
-        require(sigs_.length >= _minSigner, "Bridge: not meet threshold");
-        bytes32 transferId = keccak256(
-            abi.encodePacked(
-                relayRequest_.sender,
-                relayRequest_.receiver,
-                relayRequest_.token,
-                relayRequest_.amount,
-                relayRequest_.srcChainId,
-                relayRequest_.dstChainId,
-                relayRequest_.srcTransferId
-            )
-        );
-        require(_transfers[transferId] == false, "Bridge: transfer exists");
+    ) external override onlyOperator whenNotPaused {
         require(
             address(_cbridge) != address(0),
             "Bridge: destination chain does not supported"
         );
-
-        transferId.verifySignatures(sigs_, signers_);
+        bytes32 transferId = _verifyRequest(relayRequest_, sigs_, signers_);
 
         (uint256 amountOut, uint256 fee) = _calculateFee(
             relayRequest_.token,
             relayRequest_.dstChainId,
             relayRequest_.amount
         );
+        require(amountOut > 0, "Bridge: amount too small");
 
         if (relayRequest_.token == OVM_OAS) {
-            _cbridge.sendNative(
+            _cbridge.sendNative{value: amountOut}(
                 relayRequest_.receiver,
                 amountOut,
                 relayRequest_.dstChainId,
                 uint64(uint256(transferId)),
-                780
+                maxSlippage_
             );
             if (fee > 0) {
                 (bool success, ) = payable(_feeReceiver).call{value: fee}("");
@@ -263,7 +278,7 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
                 amountOut,
                 relayRequest_.dstChainId,
                 uint64(uint256(transferId)),
-                780
+                maxSlippage_
             );
             if (fee > 0) {
                 IERC20(relayRequest_.token).transfer(_feeReceiver, fee);
@@ -285,23 +300,8 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         RelayRequest calldata relayRequest_,
         bytes[] calldata sigs_,
         address[] calldata signers_
-    ) external onlyOperator onlySigners(signers_) whenNotPaused {
-        require(sigs_.length >= _minSigner, "Bridge: not meet threshold");
-
-        bytes32 transferId = keccak256(
-            abi.encodePacked(
-                relayRequest_.sender,
-                relayRequest_.receiver,
-                relayRequest_.token,
-                relayRequest_.amount,
-                relayRequest_.srcChainId,
-                relayRequest_.dstChainId,
-                relayRequest_.srcTransferId
-            )
-        );
-        require(_transfers[transferId] == false, "Bridge: transfer exists");
-        transferId.verifySignatures(sigs_, signers_);
-
+    ) external override onlyOperator whenNotPaused {
+        bytes32 transferId = _verifyRequest(relayRequest_, sigs_, signers_);
         IL1StandardBridge bridge = _verseBridge[relayRequest_.dstChainId];
         require(
             address(bridge) != address(0),
@@ -313,6 +313,7 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
             relayRequest_.dstChainId,
             relayRequest_.amount
         );
+        require(amountOut > 0, "Bridge: amount too small");
 
         if (relayRequest_.token == OVM_OAS) {
             bridge.depositETHTo{value: amountOut}(
@@ -325,7 +326,7 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
                 require(success, "Bridge: failure to transfer fee");
             }
         } else {
-            IERC20(relayRequest_.token).approve(address(bridge), amountOut);
+            IERC20(relayRequest_.token).safeApprove(address(bridge), amountOut);
             bridge.depositERC20To(
                 relayRequest_.token,
                 relayRequest_.l2Token,
@@ -335,7 +336,11 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
                 "0x"
             );
             if (fee > 0) {
-                IERC20(relayRequest_.token).transfer(_feeReceiver, fee);
+                IERC20(relayRequest_.token).safeTransferFrom(
+                    address(this),
+                    _feeReceiver,
+                    fee
+                );
             }
         }
 
@@ -354,8 +359,8 @@ contract Bridge is PausableUpgradeable, AccessControlEnumerableUpgradeable {
         address token,
         uint256 dstChainId,
         uint256 amountIn
-    ) external view returns (uint256 amountOut, uint256 fee) {
-        return _calculateFee(token, amountIn, dstChainId);
+    ) external view override returns (uint256 amountOut, uint256 fee) {
+        return _calculateFee(token, dstChainId, amountIn);
     }
 
     function _calculateFee(

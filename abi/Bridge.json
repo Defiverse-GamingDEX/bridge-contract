@@ -495,9 +495,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint32",
+        "internalType": "uint256",
         "name": "min",
-        "type": "uint32"
+        "type": "uint256"
       }
     ],
     "name": "setMinSigner",
@@ -510,9 +510,9 @@
     "name": "getMinSigner",
     "outputs": [
       {
-        "internalType": "uint32",
+        "internalType": "uint256",
         "name": "",
-        "type": "uint32"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -523,9 +523,9 @@
     "name": "getSignerCount",
     "outputs": [
       {
-        "internalType": "uint32",
+        "internalType": "uint256",
         "name": "",
-        "type": "uint32"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -760,9 +760,14 @@
             "type": "bytes32"
           }
         ],
-        "internalType": "struct Bridge.RelayRequest",
+        "internalType": "struct IBridge.RelayRequest",
         "name": "relayRequest_",
         "type": "tuple"
+      },
+      {
+        "internalType": "uint32",
+        "name": "maxSlippage_",
+        "type": "uint32"
       },
       {
         "internalType": "bytes[]",
@@ -825,7 +830,7 @@
             "type": "bytes32"
           }
         ],
-        "internalType": "struct Bridge.RelayRequest",
+        "internalType": "struct IBridge.RelayRequest",
         "name": "relayRequest_",
         "type": "tuple"
       },
