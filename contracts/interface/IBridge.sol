@@ -6,12 +6,21 @@ interface IBridge {
     struct RelayRequest {
         address sender;
         address receiver;
-        address token; // Layer 1 token
+        address token; // Token address at Oasys Hub
         address l2Token; // Layer 2 token, address(0) if external chain
         uint256 amount;
         uint64 srcChainId;
         uint64 dstChainId;
         bytes32 srcTransferId; // desposit tx hash
+    }
+
+    struct WithdrawRequest {
+        uint64 srcChainId;
+        uint64 dstChainId;
+        address receiver;
+        address token; // Token address at Oasys Hub
+        uint256 amount;
+        bytes32 srcTransferId; // srcTransferId
     }
 
     event AddSigner(address signer);
@@ -23,6 +32,14 @@ interface IBridge {
         address receiver,
         address token,
         uint256 amountOut,
+        bytes32 srcTransferId
+    );
+
+    event WithdrawDone(
+        bytes32 withdrawId,
+        address receiver,
+        address token,
+        uint256 amount,
         bytes32 srcTransferId
     );
 
@@ -83,6 +100,12 @@ interface IBridge {
 
     function relayVerseRequest(
         RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external;
+
+    function withdraw(
+        WithdrawRequest calldata withdrawRequest_,
         bytes[] calldata sigs_,
         address[] calldata signers_
     ) external;

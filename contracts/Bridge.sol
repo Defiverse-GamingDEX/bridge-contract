@@ -35,7 +35,11 @@ contract Bridge is
     // Verse chain id => Proxy__OVM_L1StandardBridge
     mapping(uint => IL1StandardBridge) private _verseBridge;
 
+    // transfer id => true | false
     mapping(bytes32 => bool) private _transfers;
+
+    // withdrawal id => true | false
+    mapping(bytes32 => bool) private _withdrawals;
 
     // token address => destination chainid => swap fee rate, [0..2] percents
     mapping(address => mapping(uint256 => uint256)) private _swapFeeRate;
@@ -69,22 +73,16 @@ contract Bridge is
         _;
     }
 
-    modifier onlySigners(address[] calldata signers) {
-        for (uint i = 0; i < signers.length; i++) {
-            require(hasRole(SIGNER_ROLE, signers[i]), "INVALID_SIGNER");
-        }
-        _;
-    }
-
     function initialize(
         address oas_,
         address l2Bridge_,
-        address feeReceiver_
+        address feeReceiver_,
+        uint256 minSigner_
     ) public initializer {
         __Pausable_init();
         __AccessControlEnumerable_init();
 
-        _minSigner = 3;
+        _minSigner = minSigner_;
         _feeReceiver = feeReceiver_;
 
         OVM_OAS = oas_;
@@ -170,6 +168,7 @@ contract Bridge is
     }
 
     function _setVerseBridge(uint256 chainId, address bridge) internal {
+        require(bridge != address(0), "Bridge: invalid address");
         _verseBridge[chainId] = IL1StandardBridge(bridge);
     }
 
@@ -181,6 +180,7 @@ contract Bridge is
     }
 
     function _setCBridge(address cbridge) internal {
+        require(cbridge != address(0), "Bridge: invalid address");
         _cbridge = ICBridge(cbridge);
     }
 
@@ -196,30 +196,8 @@ contract Bridge is
         _unpause();
     }
 
-    function _getTransferId(
-        RelayRequest memory relayRequest_
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    relayRequest_.sender,
-                    relayRequest_.receiver,
-                    relayRequest_.token,
-                    relayRequest_.l2Token,
-                    relayRequest_.amount,
-                    relayRequest_.srcChainId,
-                    relayRequest_.dstChainId,
-                    relayRequest_.srcTransferId
-                )
-            );
-    }
-
-    function _verifyRequest(
-        RelayRequest calldata relayRequest_,
-        bytes[] calldata sigs_,
-        address[] calldata signers_
-    ) internal view returns (bytes32) {
-        require(sigs_.length >= _minSigner, "Bridge: not meet threshold");
+    function _verifySigners(address[] calldata signers_) internal view {
+        require(signers_.length >= _minSigner, "Bridge: not meet threshold");
 
         for (uint i = 0; i < signers_.length; i++) {
             require(hasRole(SIGNER_ROLE, signers_[i]), "INVALID_SIGNER");
@@ -231,12 +209,53 @@ contract Bridge is
                 }
             }
         }
+    }
 
-        bytes32 transferId = _getTransferId(relayRequest_);
+    function _verifyRelayRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) internal view returns (bytes32) {
+        _verifySigners(signers_);
+
+        bytes32 transferId = keccak256(
+            abi.encodePacked(
+                relayRequest_.sender,
+                relayRequest_.receiver,
+                relayRequest_.token,
+                relayRequest_.l2Token,
+                relayRequest_.amount,
+                relayRequest_.srcChainId,
+                relayRequest_.dstChainId,
+                relayRequest_.srcTransferId
+            )
+        );
+
         require(_transfers[transferId] == false, "Bridge: transfer exists");
         transferId.verifySignatures(sigs_, signers_);
-
         return transferId;
+    }
+
+    function _verifyWithdrawRequest(
+        WithdrawRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) internal view returns (bytes32) {
+        _verifySigners(signers_);
+
+        bytes32 withdrawId = keccak256(
+            abi.encodePacked(
+                relayRequest_.receiver,
+                relayRequest_.token,
+                relayRequest_.amount,
+                relayRequest_.srcChainId,
+                relayRequest_.dstChainId,
+                relayRequest_.srcTransferId
+            )
+        );
+        require(_withdrawals[withdrawId] == false, "Bridge: withdraw exists");
+        withdrawId.verifySignatures(sigs_, signers_);
+        return withdrawId;
     }
 
     function relayExternalRequest(
@@ -249,7 +268,11 @@ contract Bridge is
             address(_cbridge) != address(0),
             "Bridge: destination chain does not supported"
         );
-        bytes32 transferId = _verifyRequest(relayRequest_, sigs_, signers_);
+        bytes32 transferId = _verifyRelayRequest(
+            relayRequest_,
+            sigs_,
+            signers_
+        );
 
         (uint256 amountOut, uint256 fee) = _calculateFee(
             relayRequest_.token,
@@ -271,7 +294,10 @@ contract Bridge is
                 require(success, "Bridge: failure to transfer fee");
             }
         } else {
-            IERC20(relayRequest_.token).approve(address(_cbridge), amountOut);
+            IERC20(relayRequest_.token).safeApprove(
+                address(_cbridge),
+                amountOut
+            );
             _cbridge.send(
                 relayRequest_.receiver,
                 relayRequest_.token,
@@ -281,7 +307,11 @@ contract Bridge is
                 maxSlippage_
             );
             if (fee > 0) {
-                IERC20(relayRequest_.token).transfer(_feeReceiver, fee);
+                IERC20(relayRequest_.token).safeTransferFrom(
+                    address(this),
+                    _feeReceiver,
+                    fee
+                );
             }
         }
 
@@ -301,7 +331,11 @@ contract Bridge is
         bytes[] calldata sigs_,
         address[] calldata signers_
     ) external override onlyOperator whenNotPaused {
-        bytes32 transferId = _verifyRequest(relayRequest_, sigs_, signers_);
+        bytes32 transferId = _verifyRelayRequest(
+            relayRequest_,
+            sigs_,
+            signers_
+        );
         IL1StandardBridge bridge = _verseBridge[relayRequest_.dstChainId];
         require(
             address(bridge) != address(0),
@@ -352,6 +386,40 @@ contract Bridge is
             relayRequest_.token,
             amountOut,
             relayRequest_.srcTransferId
+        );
+    }
+
+    function withdraw(
+        WithdrawRequest calldata withdrawRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external override onlyOperator whenNotPaused {
+        bytes32 withdrawId = _verifyWithdrawRequest(
+            withdrawRequest_,
+            sigs_,
+            signers_
+        );
+
+        if (withdrawRequest_.token == OVM_OAS) {
+            (bool success, ) = payable(withdrawRequest_.receiver).call{
+                value: withdrawRequest_.amount
+            }("");
+            require(success, "Bridge: failure to transfer");
+        } else {
+            IERC20(withdrawRequest_.token).safeTransfer(
+                withdrawRequest_.receiver,
+                withdrawRequest_.amount
+            );
+        }
+
+        _transfers[withdrawId] = true;
+
+        emit WithdrawDone(
+            withdrawId,
+            withdrawRequest_.receiver,
+            withdrawRequest_.token,
+            withdrawRequest_.amount,
+            withdrawRequest_.srcTransferId
         );
     }
 
