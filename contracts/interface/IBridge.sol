@@ -20,7 +20,7 @@ interface IBridge {
         address receiver;
         address token; // Token address at Oasys Hub
         uint256 amount;
-        bytes32 srcTransferId; // srcTransferId
+        bytes32 srcTransferId; // desposit tx hash
     }
 
     event AddSigner(address signer);

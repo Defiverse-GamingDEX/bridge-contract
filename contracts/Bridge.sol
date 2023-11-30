@@ -73,6 +73,10 @@ contract Bridge is
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address oas_,
         address l2Bridge_,
@@ -264,6 +268,8 @@ contract Bridge is
         bytes[] calldata sigs_,
         address[] calldata signers_
     ) external override onlyOperator whenNotPaused {
+        // The max slippage accepted, given as percentage in point (pip). Eg. 5000 means 0.5%.
+        require(maxSlippage_ <= 1000000, "Bridge: max slippage too large");
         require(
             address(_cbridge) != address(0),
             "Bridge: destination chain does not supported"
