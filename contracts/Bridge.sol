@@ -406,6 +406,9 @@ contract Bridge is
             signers_
         );
 
+        // _transfers[withdrawId] = true;
+        _withdrawals[withdrawId] = true;
+
         if (withdrawRequest_.token == OVM_OAS) {
             (bool success, ) = payable(withdrawRequest_.receiver).call{
                 value: withdrawRequest_.amount
@@ -416,9 +419,7 @@ contract Bridge is
                 withdrawRequest_.receiver,
                 withdrawRequest_.amount
             );
-        }
-
-        _transfers[withdrawId] = true;
+        }        
 
         emit WithdrawDone(
             withdrawId,
