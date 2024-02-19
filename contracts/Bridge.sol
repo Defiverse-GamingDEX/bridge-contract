@@ -287,6 +287,8 @@ contract Bridge is
         );
         require(amountOut > 0, "Bridge: amount too small");
 
+        _transfers[transferId] = true;
+
         if (relayRequest_.token == OVM_OAS) {
             _cbridge.sendNative{value: amountOut}(
                 relayRequest_.receiver,
@@ -321,8 +323,6 @@ contract Bridge is
             }
         }
 
-        _transfers[transferId] = true;
-
         emit Relay(
             transferId,
             relayRequest_.receiver,
@@ -355,6 +355,8 @@ contract Bridge is
         );
         require(amountOut > 0, "Bridge: amount too small");
 
+        _transfers[transferId] = true;
+
         if (relayRequest_.token == OVM_OAS) {
             bridge.depositETHTo{value: amountOut}(
                 relayRequest_.receiver,
@@ -384,8 +386,6 @@ contract Bridge is
             }
         }
 
-        _transfers[transferId] = true;
-
         emit Relay(
             transferId,
             relayRequest_.receiver,
@@ -406,6 +406,8 @@ contract Bridge is
             signers_
         );
 
+        _withdrawals[withdrawId] = true;
+
         if (withdrawRequest_.token == OVM_OAS) {
             (bool success, ) = payable(withdrawRequest_.receiver).call{
                 value: withdrawRequest_.amount
@@ -417,8 +419,6 @@ contract Bridge is
                 withdrawRequest_.amount
             );
         }
-
-        _transfers[withdrawId] = true;
 
         emit WithdrawDone(
             withdrawId,
