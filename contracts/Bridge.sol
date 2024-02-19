@@ -288,7 +288,7 @@ contract Bridge is
         require(amountOut > 0, "Bridge: amount too small");
 
         _transfers[transferId] = true;
-        
+
         if (relayRequest_.token == OVM_OAS) {
             _cbridge.sendNative{value: amountOut}(
                 relayRequest_.receiver,
@@ -321,7 +321,7 @@ contract Bridge is
                     fee
                 );
             }
-        }        
+        }
 
         emit Relay(
             transferId,
@@ -384,7 +384,7 @@ contract Bridge is
                     fee
                 );
             }
-        }        
+        }
 
         emit Relay(
             transferId,
@@ -406,7 +406,6 @@ contract Bridge is
             signers_
         );
 
-        // _transfers[withdrawId] = true;
         _withdrawals[withdrawId] = true;
 
         if (withdrawRequest_.token == OVM_OAS) {
@@ -419,7 +418,7 @@ contract Bridge is
                 withdrawRequest_.receiver,
                 withdrawRequest_.amount
             );
-        }        
+        }
 
         emit WithdrawDone(
             withdrawId,
