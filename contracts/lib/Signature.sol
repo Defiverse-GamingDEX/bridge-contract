@@ -45,8 +45,8 @@ library Signature {
     ) internal pure {
         require(signatures.length == signers.length, "INVALID_LENGTH_SIG");
 
+        bytes32 message = prefixed(msgHash);
         for (uint i = 0; i < signatures.length; i++) {
-            bytes32 message = prefixed(msgHash);
             require(
                 recoverSigner(message, signatures[i]) == signers[i],
                 "INVALID_SIGNATURE"
