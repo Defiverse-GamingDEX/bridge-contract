@@ -2,10 +2,13 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const abi = require("ethereumjs-abi");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
+const { BigNumber } = require("ethers");
 
 const POLYGON_TESTNET_CHAIN_ID = 80001;
 const DEFIVERSE_TESTNET_CHAIN_ID = 17117;
 const HOMEVERSE_TESTNET_CHAIN_ID = 19011;
+
+const BN = (value) => BigNumber.from(value);
 
 async function getSignature(privateKey, request) {
   const {
@@ -13,8 +16,9 @@ async function getSignature(privateKey, request) {
     receiver,
     token,
     l2Token,
+    fee,
     amount,
-    srcChainId,
+    nativeTokenAmount,
     dstChainId,
     srcTransferId,
   } = request;
@@ -24,8 +28,9 @@ async function getSignature(privateKey, request) {
     receiver,
     token,
     l2Token,
+    fee,
     amount,
-    srcChainId,
+    nativeTokenAmount,
     dstChainId,
     srcTransferId,
   ];
@@ -39,7 +44,8 @@ async function getSignature(privateKey, request) {
           "address",
           "address",
           "uint256",
-          "uint64",
+          "uint256",
+          "uint256",
           "uint64",
           "bytes32",
         ],
@@ -110,12 +116,7 @@ describe("Bridge", function () {
       const _logic = await Bridge.deploy();
       const _proxy = await DFProxy.deploy(_logic.address, proxyAdmin.address);
       bridge = await ethers.getContractAt("Bridge", _proxy.address);
-      await bridge.initialize(
-        oas,
-        cbridge.address,
-        feeReceiver.address,
-        minSigner
-      );
+      await bridge.initialize(oas, feeReceiver.address, minSigner);
 
       await bridge.setCBridge(cbridge.address);
       await bridge.setVerseBridge(
@@ -140,7 +141,9 @@ describe("Bridge", function () {
     const [deployer, operator, feeReceiver, user1, user2] =
       await ethers.getSigners();
 
+    const fee = "5000000000000000000";
     const amount = "100000000000000000000";
+    const nativeTokenAmount = "0";
     const srcChainId = DEFIVERSE_TESTNET_CHAIN_ID;
     const dstChainId = POLYGON_TESTNET_CHAIN_ID;
     const srcTransferId =
@@ -150,12 +153,14 @@ describe("Bridge", function () {
       receiver: user1.address,
       token: USDT.address,
       l2Token: USDT.address,
+      fee,
       amount,
-      srcChainId,
+      nativeTokenAmount,
       dstChainId,
       srcTransferId,
     };
     const maxSlippage_ = 10000;
+    const totalAmount = BN(amount).add(fee);
 
     const s1 = await getSignature(signer1.privateKey, relayRequest_);
     const s2 = await getSignature(signer2.privateKey, relayRequest_);
@@ -163,10 +168,10 @@ describe("Bridge", function () {
     const signers_ = [signer2.address, signer1.address];
 
     // await USDT.connect(deployer).transfer(user1.address, amount);
-    await USDT.connect(deployer).mint(user1.address, amount);
-    await USDT.connect(user1).transfer(bridge.address, amount);
+    await USDT.connect(deployer).mint(user1.address, totalAmount);
+    await USDT.connect(user1).transfer(bridge.address, totalAmount);
 
-    expect(await USDT.balanceOf(bridge.address)).to.equal(amount);
+    expect(await USDT.balanceOf(bridge.address)).to.equal(totalAmount);
 
     await expect(
       bridge
@@ -175,11 +180,13 @@ describe("Bridge", function () {
     ).to.be.revertedWith("INVALID_SIGNATURE");
   });
 
-  it("Case: Should bridge ERC20 token successful to external network", async function () {
+  it("Case: Invalid operator", async function () {
     const [deployer, operator, feeReceiver, user1, user2] =
       await ethers.getSigners();
 
+    const fee = "5000000000000000000";
     const amount = "100000000000000000000";
+    const nativeTokenAmount = "0";
     const srcChainId = DEFIVERSE_TESTNET_CHAIN_ID;
     const dstChainId = POLYGON_TESTNET_CHAIN_ID;
     const srcTransferId =
@@ -189,12 +196,58 @@ describe("Bridge", function () {
       receiver: user1.address,
       token: USDT.address,
       l2Token: USDT.address,
+      fee,
       amount,
-      srcChainId,
+      nativeTokenAmount,
       dstChainId,
       srcTransferId,
     };
     const maxSlippage_ = 10000;
+    const totalAmount = BN(amount).add(fee);
+
+    const s1 = await getSignature(signer1.privateKey, relayRequest_);
+    const s2 = await getSignature(signer2.privateKey, relayRequest_);
+    const sigs_ = [s1.signature, s2.signature];
+    const signers_ = [signer2.address, signer1.address];
+
+    // await USDT.connect(deployer).transfer(user1.address, amount);
+    await USDT.connect(deployer).mint(user1.address, totalAmount);
+    await USDT.connect(user1).transfer(bridge.address, totalAmount);
+
+    expect(await USDT.balanceOf(bridge.address)).to.equal(totalAmount);
+
+    await expect(
+      bridge
+        .connect(user2)
+        .relayExternalRequest(relayRequest_, maxSlippage_, sigs_, signers_)
+    ).to.be.revertedWith("Bridge: caller is not operator");
+  });
+
+  it("Case: Bridge ERC20 token to external network", async function () {
+    const [deployer, operator, feeReceiver, user1, user2] =
+      await ethers.getSigners();
+
+    const fee = "5000000000000000000";
+    const amount = "100000000000000000000";
+    const nativeTokenAmount = "0";
+    const srcChainId = DEFIVERSE_TESTNET_CHAIN_ID;
+    const dstChainId = POLYGON_TESTNET_CHAIN_ID;
+    const srcTransferId =
+      "0x8c79d288c3fbd456527242ff7adfab1bb295829c964a2b95a781de2944f5523d";
+    const relayRequest_ = {
+      sender: user1.address,
+      receiver: user1.address,
+      token: USDT.address,
+      l2Token: USDT.address,
+      fee,
+      amount,
+      nativeTokenAmount,
+      dstChainId,
+      srcTransferId,
+    };
+    const maxSlippage_ = 10000;
+
+    const totalAmount = BN(amount).add(fee);
 
     const s1 = await getSignature(signer1.privateKey, relayRequest_);
     const s2 = await getSignature(signer2.privateKey, relayRequest_);
@@ -202,10 +255,10 @@ describe("Bridge", function () {
     const signers_ = [signer1.address, signer2.address];
 
     // await USDT.connect(deployer).transfer(user1.address, amount);
-    await USDT.connect(deployer).mint(user1.address, amount);
-    await USDT.connect(user1).transfer(bridge.address, amount);
+    await USDT.connect(deployer).mint(user1.address, totalAmount);
+    await USDT.connect(user1).transfer(bridge.address, totalAmount);
 
-    expect(await USDT.balanceOf(bridge.address)).to.equal(amount);
+    expect(await USDT.balanceOf(bridge.address)).to.equal(totalAmount);
 
     await expect(
       bridge
@@ -213,14 +266,24 @@ describe("Bridge", function () {
         .relayExternalRequest(relayRequest_, maxSlippage_, sigs_, signers_)
     )
       .to.emit(bridge, "Relay")
-      .withArgs(s1.hash, user1.address, USDT.address, anyValue, srcTransferId);
+      .withArgs(
+        s1.hash,
+        user1.address,
+        USDT.address,
+        anyValue,
+        anyValue,
+        anyValue,
+        srcTransferId
+      );
   });
 
-  it("Case: Should bridge OAS token successful to external network", async function () {
+  it("Case: Bridge OAS token to external network", async function () {
     const [deployer, operator, feeReceiver, user1, user2] =
       await ethers.getSigners();
 
+    const fee = "5000000000000000000";
     const amount = "100000000000000000000";
+    const nativeTokenAmount = "0";
     const srcChainId = DEFIVERSE_TESTNET_CHAIN_ID;
     const dstChainId = POLYGON_TESTNET_CHAIN_ID;
     const srcTransferId =
@@ -230,19 +293,21 @@ describe("Bridge", function () {
       receiver: user1.address,
       token: oas,
       l2Token: oas,
+      fee,
       amount,
-      srcChainId,
+      nativeTokenAmount,
       dstChainId,
       srcTransferId,
     };
     const maxSlippage_ = 10000;
+    const totalAmount = BN(amount).add(fee);
 
     const s1 = await getSignature(signer1.privateKey, relayRequest_);
     const s2 = await getSignature(signer2.privateKey, relayRequest_);
     const sigs_ = [s1.signature, s2.signature];
     const signers_ = [signer1.address, signer2.address];
 
-    await user1.sendTransaction({ to: bridge.address, value: amount });
+    await user1.sendTransaction({ to: bridge.address, value: totalAmount });
 
     await expect(
       bridge
@@ -250,14 +315,25 @@ describe("Bridge", function () {
         .relayExternalRequest(relayRequest_, maxSlippage_, sigs_, signers_)
     )
       .to.emit(bridge, "Relay")
-      .withArgs(s1.hash, user1.address, oas, anyValue, srcTransferId);
+      .withArgs(
+        s1.hash,
+        user1.address,
+        oas,
+        anyValue,
+        anyValue,
+        anyValue,
+        srcTransferId
+      );
   });
 
-  it("Case: Should bridge ERC20 token successful to verse network", async function () {
+  it("Case: Bridge ERC20 token to verse network", async function () {
     const [deployer, operator, feeReceiver, user1, user2] =
       await ethers.getSigners();
 
+    const gasLimit = 2000000;
+    const fee = "5000000000000000000";
     const amount = "100000000000000000000";
+    const nativeTokenAmount = "0";
     const srcChainId = DEFIVERSE_TESTNET_CHAIN_ID;
     const dstChainId = HOMEVERSE_TESTNET_CHAIN_ID;
     const srcTransferId =
@@ -267,11 +343,14 @@ describe("Bridge", function () {
       receiver: user1.address,
       token: USDT.address,
       l2Token: USDT.address,
+      fee,
       amount,
-      srcChainId,
+      nativeTokenAmount,
       dstChainId,
       srcTransferId,
     };
+
+    const totalAmount = BN(amount).add(fee);
 
     const s1 = await getSignature(signer1.privateKey, relayRequest_);
     const s2 = await getSignature(signer2.privateKey, relayRequest_);
@@ -279,23 +358,35 @@ describe("Bridge", function () {
     const signers_ = [signer1.address, signer2.address];
 
     // await USDT.connect(deployer).transfer(user1.address, amount);
-    await USDT.connect(deployer).mint(user1.address, amount);
-    await USDT.connect(user1).transfer(bridge.address, amount);
+    await USDT.connect(deployer).mint(user1.address, totalAmount);
+    await USDT.connect(user1).transfer(bridge.address, totalAmount);
 
-    expect(await USDT.balanceOf(bridge.address)).to.equal(amount);
+    expect(await USDT.balanceOf(bridge.address)).to.equal(totalAmount);
 
     await expect(
-      bridge.connect(operator).relayVerseRequest(relayRequest_, sigs_, signers_)
+      bridge
+        .connect(operator)
+        .relayVerseRequest(relayRequest_, gasLimit, sigs_, signers_)
     )
       .to.emit(bridge, "Relay")
-      .withArgs(s1.hash, user1.address, USDT.address, anyValue, srcTransferId);
+      .withArgs(
+        s1.hash,
+        user1.address,
+        USDT.address,
+        anyValue,
+        anyValue,
+        anyValue,
+        srcTransferId
+      );
   });
 
-  it("Case: Should bridge OAS token successful to verse network", async function () {
+  it("Case: Bridge OAS token to verse network", async function () {
     const [deployer, operator, feeReceiver, user1, user2] =
       await ethers.getSigners();
-
+    const gasLimit = 2000000;
+    const fee = "5000000000000000000";
     const amount = "100000000000000000000";
+    const nativeTokenAmount = "0";
     const srcChainId = DEFIVERSE_TESTNET_CHAIN_ID;
     const dstChainId = HOMEVERSE_TESTNET_CHAIN_ID;
     const srcTransferId =
@@ -305,23 +396,93 @@ describe("Bridge", function () {
       receiver: user1.address,
       token: oas,
       l2Token: oas,
+      fee,
       amount,
-      srcChainId,
+      nativeTokenAmount,
       dstChainId,
       srcTransferId,
     };
+    const totalAmount = BN(amount).add(fee);
 
     const s1 = await getSignature(signer1.privateKey, relayRequest_);
     const s2 = await getSignature(signer2.privateKey, relayRequest_);
     const sigs_ = [s1.signature, s2.signature];
     const signers_ = [signer1.address, signer2.address];
 
-    await user1.sendTransaction({ to: bridge.address, value: amount });
+    await user1.sendTransaction({ to: bridge.address, value: totalAmount });
 
     await expect(
-      bridge.connect(operator).relayVerseRequest(relayRequest_, sigs_, signers_)
+      bridge
+        .connect(operator)
+        .relayVerseRequest(relayRequest_, gasLimit, sigs_, signers_)
     )
       .to.emit(bridge, "Relay")
-      .withArgs(s1.hash, user1.address, oas, anyValue, srcTransferId);
+      .withArgs(
+        s1.hash,
+        user1.address,
+        oas,
+        anyValue,
+        anyValue,
+        anyValue,
+        srcTransferId
+      );
+  });
+
+  it("Case: Bridge ERC20 token to verse network with gas option", async function () {
+    const [deployer, operator, feeReceiver, user1, user2] =
+      await ethers.getSigners();
+
+    const gasLimit = 2000000;
+    const fee = "5000000000000000000";
+    const amount = "100000000000000000000";
+    const nativeTokenAmount = "15000000000000000000";
+    const dstChainId = HOMEVERSE_TESTNET_CHAIN_ID;
+    const srcTransferId =
+      "0x8c79d288c3fbd456527242ff7adfab1bb295829c964a2b95a781de2944f5523d";
+    const relayRequest_ = {
+      sender: user1.address,
+      receiver: user1.address,
+      token: USDT.address,
+      l2Token: USDT.address,
+      fee,
+      amount,
+      nativeTokenAmount,
+      dstChainId,
+      srcTransferId,
+    };
+
+    const totalAmount = BN(amount).add(fee);
+
+    const s1 = await getSignature(signer1.privateKey, relayRequest_);
+    const s2 = await getSignature(signer2.privateKey, relayRequest_);
+    const sigs_ = [s1.signature, s2.signature];
+    const signers_ = [signer1.address, signer2.address];
+
+    // await USDT.connect(deployer).transfer(user1.address, amount);
+    await USDT.connect(deployer).mint(user1.address, totalAmount);
+    await USDT.connect(user1).transfer(bridge.address, totalAmount);
+
+    expect(await USDT.balanceOf(bridge.address)).to.equal(totalAmount);
+
+    await user1.sendTransaction({
+      to: bridge.address,
+      value: nativeTokenAmount,
+    });
+
+    await expect(
+      bridge
+        .connect(operator)
+        .relayVerseRequest(relayRequest_, gasLimit, sigs_, signers_)
+    )
+      .to.emit(bridge, "Relay")
+      .withArgs(
+        s1.hash,
+        user1.address,
+        USDT.address,
+        anyValue,
+        anyValue,
+        anyValue,
+        srcTransferId
+      );
   });
 });

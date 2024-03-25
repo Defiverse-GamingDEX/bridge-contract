@@ -31,11 +31,7 @@ module.exports = async function (deployer, network, accounts) {
   await contractDeployer.deployAllManifests({
     args: {
       Bridge: {
-        initArgs: [
-          "config:oasys.oas",
-          "config:oasys.l2-bridge.address",
-          "config:fee-receiver.address",
-        ],
+        initArgs: ["config:oasys.oas", "config:fee-receiver.address"],
       },
     },
   });
