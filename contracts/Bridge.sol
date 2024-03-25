@@ -23,12 +23,9 @@ contract Bridge is
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    uint256 public constant A_HUNDRED_PERCENT = 10_000; // 100%
-
     uint256 private _minSigner;
 
     address public OVM_OAS;
-    address public L2_STANDARD_BRIDGE;
 
     ICBridge private _cbridge;
 
@@ -37,15 +34,6 @@ contract Bridge is
 
     // transfer id => true | false
     mapping(bytes32 => bool) private _transfers;
-
-    // withdrawal id => true | false
-    mapping(bytes32 => bool) private _withdrawals;
-
-    // token address => destination chainid => swap fee rate, [0..2] percents
-    mapping(address => mapping(uint256 => uint256)) private _swapFeeRate;
-
-    // token address => destination chainid => base fee, fixed fee
-    mapping(address => mapping(uint256 => uint256)) private _baseFee;
 
     address private _feeReceiver;
 
@@ -79,7 +67,6 @@ contract Bridge is
 
     function initialize(
         address oas_,
-        address l2Bridge_,
         address feeReceiver_,
         uint256 minSigner_
     ) public initializer {
@@ -88,9 +75,7 @@ contract Bridge is
 
         _minSigner = minSigner_;
         _feeReceiver = feeReceiver_;
-
         OVM_OAS = oas_;
-        L2_STANDARD_BRIDGE = l2Bridge_;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OPERATOR_ROLE, _msgSender());
@@ -131,36 +116,6 @@ contract Bridge is
         address signer
     ) external view override returns (bool) {
         return hasRole(SIGNER_ROLE, signer);
-    }
-
-    function getSwapFeeRate(
-        address token,
-        uint256 chainId
-    ) external view override returns (uint256) {
-        return _swapFeeRate[token][chainId];
-    }
-
-    function setSwapFeeRate(
-        address token,
-        uint256 chainId,
-        uint256 feeRate
-    ) external override onlyOperator {
-        _swapFeeRate[token][chainId] = feeRate;
-    }
-
-    function getBaseFee(
-        address token,
-        uint256 chainId
-    ) external view override returns (uint256) {
-        return _baseFee[token][chainId];
-    }
-
-    function setBaseFee(
-        address token,
-        uint256 chainId,
-        uint256 fee
-    ) external override onlyOperator {
-        _baseFee[token][chainId] = fee;
     }
 
     function setFeeReceiver(address addr) external override onlyAdmin {
@@ -228,8 +183,9 @@ contract Bridge is
                 relayRequest_.receiver,
                 relayRequest_.token,
                 relayRequest_.l2Token,
+                relayRequest_.fee,
                 relayRequest_.amount,
-                relayRequest_.srcChainId,
+                relayRequest_.nativeTokenAmount,
                 relayRequest_.dstChainId,
                 relayRequest_.srcTransferId
             )
@@ -240,34 +196,13 @@ contract Bridge is
         return transferId;
     }
 
-    function _verifyWithdrawRequest(
-        WithdrawRequest calldata relayRequest_,
-        bytes[] calldata sigs_,
-        address[] calldata signers_
-    ) internal view returns (bytes32) {
-        _verifySigners(signers_);
-
-        bytes32 withdrawId = keccak256(
-            abi.encodePacked(
-                relayRequest_.receiver,
-                relayRequest_.token,
-                relayRequest_.amount,
-                relayRequest_.srcChainId,
-                relayRequest_.dstChainId,
-                relayRequest_.srcTransferId
-            )
-        );
-        require(_withdrawals[withdrawId] == false, "Bridge: withdraw exists");
-        withdrawId.verifySignatures(sigs_, signers_);
-        return withdrawId;
-    }
-
     function relayExternalRequest(
         RelayRequest calldata relayRequest_,
         uint32 maxSlippage_,
         bytes[] calldata sigs_,
         address[] calldata signers_
     ) external override onlyOperator whenNotPaused {
+        require(relayRequest_.amount > 0, "Bridge: amount too small");
         // The max slippage accepted, given as percentage in point (pip). Eg. 5000 means 0.5%.
         require(maxSlippage_ <= 1000000, "Bridge: max slippage too large");
         require(
@@ -280,45 +215,39 @@ contract Bridge is
             signers_
         );
 
-        (uint256 amountOut, uint256 fee) = _calculateFee(
-            relayRequest_.token,
-            relayRequest_.dstChainId,
-            relayRequest_.amount
-        );
-        require(amountOut > 0, "Bridge: amount too small");
-
         _transfers[transferId] = true;
 
         if (relayRequest_.token == OVM_OAS) {
-            _cbridge.sendNative{value: amountOut}(
+            _cbridge.sendNative{value: relayRequest_.amount}(
                 relayRequest_.receiver,
-                amountOut,
+                relayRequest_.amount,
                 relayRequest_.dstChainId,
                 uint64(uint256(transferId)),
                 maxSlippage_
             );
-            if (fee > 0) {
-                (bool success, ) = payable(_feeReceiver).call{value: fee}("");
+            if (relayRequest_.fee > 0) {
+                (bool success, ) = payable(_feeReceiver).call{
+                    value: relayRequest_.fee
+                }("");
                 require(success, "Bridge: failure to transfer fee");
             }
         } else {
             IERC20(relayRequest_.token).safeApprove(
                 address(_cbridge),
-                amountOut
+                relayRequest_.amount
             );
             _cbridge.send(
                 relayRequest_.receiver,
                 relayRequest_.token,
-                amountOut,
+                relayRequest_.amount,
                 relayRequest_.dstChainId,
                 uint64(uint256(transferId)),
                 maxSlippage_
             );
-            if (fee > 0) {
-                IERC20(relayRequest_.token).safeTransferFrom(
-                    address(this),
+            if (relayRequest_.fee > 0) {
+                IERC20(relayRequest_.token).safeTransfer(
                     _feeReceiver,
-                    fee
+                    relayRequest_.fee
                 );
             }
         }
@@ -327,16 +256,21 @@ contract Bridge is
             transferId,
             relayRequest_.receiver,
             relayRequest_.token,
-            amountOut,
+            relayRequest_.fee,
+            relayRequest_.amount,
+            relayRequest_.nativeTokenAmount,
             relayRequest_.srcTransferId
         );
     }
 
     function relayVerseRequest(
         RelayRequest calldata relayRequest_,
+        uint32 gasLimit_, // default 2_000_000
         bytes[] calldata sigs_,
         address[] calldata signers_
     ) external override onlyOperator whenNotPaused {
+        require(relayRequest_.amount > 0, "Bridge: amount too small");
+
         bytes32 transferId = _verifyRelayRequest(
             relayRequest_,
             sigs_,
@@ -348,40 +282,46 @@ contract Bridge is
             "Bridge: destination chain does not supported"
         );
 
-        (uint256 amountOut, uint256 fee) = _calculateFee(
-            relayRequest_.token,
-            relayRequest_.dstChainId,
-            relayRequest_.amount
-        );
-        require(amountOut > 0, "Bridge: amount too small");
-
         _transfers[transferId] = true;
 
         if (relayRequest_.token == OVM_OAS) {
-            bridge.depositETHTo{value: amountOut}(
+            bridge.depositETHTo{value: relayRequest_.amount}(
                 relayRequest_.receiver,
-                2_000_000,
+                gasLimit_,
                 "0x"
             );
-            if (fee > 0) {
-                (bool success, ) = payable(_feeReceiver).call{value: fee}("");
+            if (relayRequest_.fee > 0) {
+                (bool success, ) = payable(_feeReceiver).call{
+                    value: relayRequest_.fee
+                }("");
                 require(success, "Bridge: failure to transfer fee");
             }
         } else {
-            IERC20(relayRequest_.token).safeApprove(address(bridge), amountOut);
+            IERC20(relayRequest_.token).safeApprove(
+                address(bridge),
+                relayRequest_.amount
+            );
             bridge.depositERC20To(
                 relayRequest_.token,
                 relayRequest_.l2Token,
                 relayRequest_.receiver,
-                amountOut,
-                2_000_000,
+                relayRequest_.amount,
+                gasLimit_,
                 "0x"
             );
-            if (fee > 0) {
-                IERC20(relayRequest_.token).safeTransferFrom(
-                    address(this),
+
+            if (relayRequest_.nativeTokenAmount > 0) {
+                bridge.depositETHTo{value: relayRequest_.nativeTokenAmount}(
+                    relayRequest_.receiver,
+                    gasLimit_,
+                    "0x"
+                );
+            }
+
+            if (relayRequest_.fee > 0) {
+                IERC20(relayRequest_.token).safeTransfer(
                     _feeReceiver,
-                    fee
+                    relayRequest_.fee
                 );
             }
         }
@@ -390,69 +330,10 @@ contract Bridge is
             transferId,
             relayRequest_.receiver,
             relayRequest_.token,
-            amountOut,
+            relayRequest_.fee,
+            relayRequest_.amount,
+            relayRequest_.nativeTokenAmount,
             relayRequest_.srcTransferId
         );
-    }
-
-    function withdraw(
-        WithdrawRequest calldata withdrawRequest_,
-        bytes[] calldata sigs_,
-        address[] calldata signers_
-    ) external override onlyOperator whenNotPaused {
-        bytes32 withdrawId = _verifyWithdrawRequest(
-            withdrawRequest_,
-            sigs_,
-            signers_
-        );
-
-        _withdrawals[withdrawId] = true;
-
-        if (withdrawRequest_.token == OVM_OAS) {
-            (bool success, ) = payable(withdrawRequest_.receiver).call{
-                value: withdrawRequest_.amount
-            }("");
-            require(success, "Bridge: failure to transfer");
-        } else {
-            IERC20(withdrawRequest_.token).safeTransfer(
-                withdrawRequest_.receiver,
-                withdrawRequest_.amount
-            );
-        }
-
-        emit WithdrawDone(
-            withdrawId,
-            withdrawRequest_.receiver,
-            withdrawRequest_.token,
-            withdrawRequest_.amount,
-            withdrawRequest_.srcTransferId
-        );
-    }
-
-    function estimateFee(
-        address token,
-        uint256 dstChainId,
-        uint256 amountIn
-    ) external view override returns (uint256 amountOut, uint256 fee) {
-        return _calculateFee(token, dstChainId, amountIn);
-    }
-
-    function _calculateFee(
-        address token,
-        uint256 dstChainId,
-        uint256 amountIn
-    ) private view returns (uint256 amountOut, uint256 fee) {
-        uint256 swapFee = (amountIn * _swapFeeRate[token][dstChainId]) /
-            A_HUNDRED_PERCENT;
-        fee = _baseFee[token][dstChainId] + swapFee;
-
-        if (fee > amountIn) {
-            fee = amountIn;
-            amountOut = 0;
-        } else {
-            amountOut = amountIn - fee;
-        }
-
-        return (amountOut, fee);
     }
 }
