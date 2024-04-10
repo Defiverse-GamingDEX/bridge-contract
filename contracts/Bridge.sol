@@ -70,6 +70,8 @@ contract Bridge is
         address feeReceiver_,
         uint256 minSigner_
     ) public initializer {
+        require(minSigner_ > 0, "Bridge: minSigner must be greater than 0");
+
         __Pausable_init();
         __AccessControlEnumerable_init();
 
@@ -232,7 +234,7 @@ contract Bridge is
                 require(success, "Bridge: failure to transfer fee");
             }
         } else {
-            IERC20(relayRequest_.token).safeApprove(
+            IERC20(relayRequest_.token).safeIncreaseAllowance(
                 address(_cbridge),
                 relayRequest_.amount
             );
@@ -297,7 +299,7 @@ contract Bridge is
                 require(success, "Bridge: failure to transfer fee");
             }
         } else {
-            IERC20(relayRequest_.token).safeApprove(
+            IERC20(relayRequest_.token).safeIncreaseAllowance(
                 address(bridge),
                 relayRequest_.amount
             );
