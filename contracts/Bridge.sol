@@ -81,7 +81,8 @@ contract Bridge is
         address oas_,
         address l2Bridge_,
         address feeReceiver_,
-        uint256 minSigner_
+        uint256 minSigner_,
+        address admin_
     ) public initializer {
         __Pausable_init();
         __AccessControlEnumerable_init();
@@ -92,9 +93,9 @@ contract Bridge is
         OVM_OAS = oas_;
         L2_STANDARD_BRIDGE = l2Bridge_;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(OPERATOR_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, admin_);
+        _setupRole(OPERATOR_ROLE, admin_);
+        _setupRole(PAUSER_ROLE, admin_);
     }
 
     receive() external payable {}
@@ -315,11 +316,7 @@ contract Bridge is
                 maxSlippage_
             );
             if (fee > 0) {
-                IERC20(relayRequest_.token).safeTransferFrom(
-                    address(this),
-                    _feeReceiver,
-                    fee
-                );
+                IERC20(relayRequest_.token).safeTransfer(_feeReceiver, fee);
             }
         }
 
@@ -378,11 +375,7 @@ contract Bridge is
                 "0x"
             );
             if (fee > 0) {
-                IERC20(relayRequest_.token).safeTransferFrom(
-                    address(this),
-                    _feeReceiver,
-                    fee
-                );
+                IERC20(relayRequest_.token).safeTransfer(_feeReceiver, fee);
             }
         }
 
