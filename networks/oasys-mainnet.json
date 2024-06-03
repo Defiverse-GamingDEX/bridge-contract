@@ -1,22 +1,41 @@
 {
-  "contracts": {
-    "DFProxyAdmin": "",
-    "Bridge": {
-      "proxy": "",
-      "impl": ""
+    "contracts": {
+        "DFProxyAdmin": "0x396c7a2bb4d98207c335236020487f7488510670",
+        "Bridge": {
+            "proxy": "0xa5c4db36bd26426c186d170bf46165a937d9cad1",
+            "impl": "0x05ff93bfb7dD2Ea8F19dD15381bb63bB06db660F"
+        }
+    },
+    "mapping": {},
+    "roles": {
+        "Bridge": {
+            "OPERATOR_ROLE": [
+                "0xB38c4e794343755D44DaD5290174A9b96E1b61c3"
+            ]
+        }
+    },
+    "config": {
+        "admin.address": "0xefb98d7283252d4f6f913e153688C015C18Fa396",
+        "fee-receiver.address": "0x5fF7639693807A23c56FC6aEB6cD16851246396f",
+        "oasys.oas": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+        "oasys.l2-bridge.address": "0x4200000000000000000000000000000000000010",
+        "oasys.l1-bridge.id": [
+            16116,
+            19011,
+            29548,
+            2400
+        ],
+        "oasys.l1-bridge.address": [
+            "0x0cc5366BE800cf73daB2DBfDE031C255a6f1E3cC",
+            "0x9245e19eB88de2534E03E764FB2a5f194e6d97AD",
+            "0xA16517A9796bAc73eFA7d07269F9818b7978dc2A",
+            "0xa34a85ecb19c88d4965EcAfB10019E63050a1098"
+        ],
+        "cbridge.address": "0x5200000000000000000000000000000000000015",
+        "min-signer": "1",
+        "signers": [
+            "0x6E1728C7B8E7fc300D4EA023a98f4D6337822323",
+            "0x5C0C1EbE736F5985c5164C5d5d9E6183AD17a020"
+        ]
     }
-  },
-  "mapping": {},
-  "roles": {},
-  "config": {
-    "fee-receiver.address": "0x5fF7639693807A23c56FC6aEB6cD16851246396f",
-    "oasys.oas": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-    "oasys.l2-bridge.address": "0x4200000000000000000000000000000000000010",
-    "oasys.l1-bridge.id": [16116, 19011],
-    "oasys.l1-bridge.address": [
-      "0x0cc5366BE800cf73daB2DBfDE031C255a6f1E3cC",
-      "0x9245e19eB88de2534E03E764FB2a5f194e6d97AD"
-    ],
-    "cbridge.address": "0x5200000000000000000000000000000000000015"
-  }
 }

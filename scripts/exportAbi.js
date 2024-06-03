@@ -26,3 +26,5 @@ const exportAbis = function (contracts, subfolder, outputAbiFolder = "./abi") {
 };
 
 exportAbis(["Bridge"], ".");
+
+exportAbis(["IL2ERC20Bridge", "IL1StandardBridge"], ".");

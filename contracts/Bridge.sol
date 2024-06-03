@@ -9,7 +9,6 @@ import "./lib/Signature.sol";
 import "./interface/IBridge.sol";
 import "./interface/ICBridge.sol";
 import "./interface/IL1StandardBridge.sol";
-import "./interface/IL2StandardERC20.sol";
 
 contract Bridge is
     IBridge,

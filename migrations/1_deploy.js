@@ -35,6 +35,8 @@ module.exports = async function (deployer, network, accounts) {
           "config:oasys.oas",
           "config:oasys.l2-bridge.address",
           "config:fee-receiver.address",
+          "config:min-signer",
+          "config:admin.address",
         ],
       },
     },
@@ -43,9 +45,25 @@ module.exports = async function (deployer, network, accounts) {
   // Grant roles
   await contractDeployer.grantRoles();
 
-  // await config(contractDeployer);
+  await config(contractDeployer);
 
   // await testBridgeVerse(contractDeployer);
+
+  await test(contractDeployer);
+
+  console.log("Done!");
+};
+
+const test = async (contractDeployer) => {
+  let contract = await contractDeployer.loadContract("Bridge");
+
+  const token = "0xdDB07cc0f2F9fB7899DbA5a21964f3C6D2740e44";
+  const amount = "15000000000000000000";
+  const dstChainId = 16116;
+  console.log(`estimateFee: ${token} ${dstChainId} ${amount}`);
+  const rs = await contract.estimateFee(token, dstChainId, amount);
+  console.log("estimateFee amountOut:", rs.amountOut.toString());
+  console.log("estimateFee fee:", rs.fee.toString());
 };
 
 const testBridgeVerse = async (contractDeployer) => {
@@ -71,22 +89,71 @@ const testBridgeVerse = async (contractDeployer) => {
 };
 
 const config = async (contractDeployer) => {
-  console.log("== config");
+  console.log("\n== config start ==");
+
+  const setupCBridge = false;
+  const setupVerseBridge = false;
 
   let contract = await contractDeployer.loadContract("Bridge");
-  const chainIds = await contractDeployer.formatValue(
-    "config:oasys.l1-bridge.id"
-  );
-  const bridges = await contractDeployer.formatValue(
-    "config:oasys.l1-bridge.address"
-  );
 
-  for (let i = 0; i < chainIds.length; i = i + 1) {
-    console.log("Set VerseBridge:", chainIds[i], bridges[i]);
-    await contract.setVerseBridge(chainIds[i], bridges[i]);
+  // grant signer
+  {
+    const signers = await contractDeployer.formatValue("config:signers");
+    for (let i = 0; i < signers.length; i = i + 1) {
+      const signer = signers[i];
+      const isSignerExists = await contract.isSignerExists(signer);
+      console.log(`isSignerExists: ${signer} ${isSignerExists}`);
+      if (!isSignerExists) {
+        const rs = await contract.addSigner(signer);
+        console.log("addSigner tx:", rs.tx);
+      }
+    }
   }
 
-  const cbridge = contractDeployer.formatValue("config:cbridge.address");
-  console.log("Set CBridge:", cbridge);
-  await contract.setCBridge(cbridge);
+  console.log("");
+  // min signer
+  {
+    const newMinSigner = await contractDeployer.formatValue(
+      "config:min-signer"
+    );
+    const currentMinSigner = await contract.getMinSigner();
+    console.log("currentMinSigner:", currentMinSigner.toString());
+    console.log("newMinSigner:", newMinSigner);
+    if (currentMinSigner.toString() != `${newMinSigner}`) {
+      const rs = await contract.setMinSigner(newMinSigner);
+      console.log("setMinSigner tx:", rs.tx);
+    }
+  }
+
+  // set cBridge
+  if (setupCBridge) {
+    console.log("");
+
+    const newCBridge = await contractDeployer.formatValue(
+      "config:cbridge.address"
+    );
+    console.log("setCBridge:", newCBridge);
+    const rs = await contract.setCBridge(newCBridge);
+    console.log("setCBridge tx:", rs.tx);
+  }
+
+  // set Verse Bridge
+  if (setupVerseBridge) {
+    console.log("");
+
+    const chainIds = await contractDeployer.formatValue(
+      "config:oasys.l1-bridge.id"
+    );
+    const bridges = await contractDeployer.formatValue(
+      "config:oasys.l1-bridge.address"
+    );
+
+    for (let i = 0; i < chainIds.length; i = i + 1) {
+      console.log("Set VerseBridge:", chainIds[i], bridges[i]);
+      const rs = await contract.setVerseBridge(chainIds[i], bridges[i]);
+      console.log("setVerseBridge tx:", rs.tx);
+    }
+  }
+
+  console.log("== config done ==\n");
 };

@@ -506,6 +506,11 @@
         "internalType": "uint256",
         "name": "minSigner_",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "admin_",
+        "type": "address"
       }
     ],
     "name": "initialize",
