@@ -4,16 +4,17 @@ const { ethers } = hre;
 async function main() {
   console.log("== Deploy start");
 
-  const DFProxyAdmin_expectedAddress = "0x48D9D629aC7Ba6c8b6c097A126c7E80c9E33fdD3";
-  const Bridge_expectedAddress = "0x9ba3dFDD27d9d0A94CaA4bA723990A020378b182";
-  const BridgeProxy_expectedAddress = "0xa5c4db36bd26426c186d170bf46165a937d9cad1";
+  const DFProxyAdmin_expectedAddress =
+    "0x48D9D629aC7Ba6c8b6c097A126c7E80c9E33fdD3";
+  const Bridge_expectedAddress = "0xa67d27c4253DF50ff152166Fc8257b1e40b226c2";
+  const BridgeProxy_expectedAddress =
+    "0xBAC3dcc1519e06c5E92112F0462719E32Cc03C75";
 
   // Initialize args
   const oas_ = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000";
-  const l2Bridge = "0x4200000000000000000000000000000000000010";
   const feeReceiver = "0x5fF7639693807A23c56FC6aEB6cD16851246396f";
   const minSigner = 1;
-  const admin = "0xefb98d7283252d4f6f913e153688C015C18Fa396";
+  const admin = "0x1f15e7C7fA5bC85D228E6909e32069adEBC058e5";
 
   {
     // DFProxyAdmin
@@ -49,7 +50,7 @@ DFProxy: deplyment bytecode:
 
 ${deplyTx.data}
 `);
-  }  
+  } 
 
   const bridgeProxy = await ethers.getContractAt(
     "Bridge",
@@ -57,7 +58,6 @@ ${deplyTx.data}
   );
   const call = await bridgeProxy.populateTransaction.initialize(
     oas_,
-    l2Bridge,
     feeReceiver,
     minSigner,
     admin
