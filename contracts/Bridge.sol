@@ -68,7 +68,8 @@ contract Bridge is
     function initialize(
         address oas_,
         address feeReceiver_,
-        uint256 minSigner_
+        uint256 minSigner_,
+        address admin_
     ) public initializer {
         __Pausable_init();
         __AccessControlEnumerable_init();
@@ -77,9 +78,9 @@ contract Bridge is
         _feeReceiver = feeReceiver_;
         OVM_OAS = oas_;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(OPERATOR_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, admin_);
+        _setupRole(OPERATOR_ROLE, admin_);
+        _setupRole(PAUSER_ROLE, admin_);
     }
 
     receive() external payable {}

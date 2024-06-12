@@ -67,7 +67,19 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amountOut",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "nativeTokenAmount",
         "type": "uint256"
       },
       {
@@ -182,56 +194,6 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "withdrawId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "srcTransferId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "WithdrawDone",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "A_HUNDRED_PERCENT",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "DEFAULT_ADMIN_ROLE",
     "outputs": [
@@ -239,19 +201,6 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "L2_STANDARD_BRIDGE",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -494,11 +443,6 @@
       },
       {
         "internalType": "address",
-        "name": "l2Bridge_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "feeReceiver_",
         "type": "address"
       },
@@ -601,100 +545,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getSwapFeeRate",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "feeRate",
-        "type": "uint256"
-      }
-    ],
-    "name": "setSwapFeeRate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getBaseFee",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
-      }
-    ],
-    "name": "setBaseFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "addr",
         "type": "address"
       }
@@ -788,13 +638,18 @@
           },
           {
             "internalType": "uint256",
+            "name": "fee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "amount",
             "type": "uint256"
           },
           {
-            "internalType": "uint64",
-            "name": "srcChainId",
-            "type": "uint64"
+            "internalType": "uint256",
+            "name": "nativeTokenAmount",
+            "type": "uint256"
           },
           {
             "internalType": "uint64",
@@ -858,13 +713,18 @@
           },
           {
             "internalType": "uint256",
+            "name": "fee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "amount",
             "type": "uint256"
           },
           {
-            "internalType": "uint64",
-            "name": "srcChainId",
-            "type": "uint64"
+            "internalType": "uint256",
+            "name": "nativeTokenAmount",
+            "type": "uint256"
           },
           {
             "internalType": "uint64",
@@ -882,6 +742,11 @@
         "type": "tuple"
       },
       {
+        "internalType": "uint32",
+        "name": "gasLimit_",
+        "type": "uint32"
+      },
+      {
         "internalType": "bytes[]",
         "name": "sigs_",
         "type": "bytes[]"
@@ -895,95 +760,6 @@
     "name": "relayVerseRequest",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint64",
-            "name": "srcChainId",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint64",
-            "name": "dstChainId",
-            "type": "uint64"
-          },
-          {
-            "internalType": "address",
-            "name": "receiver",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "token",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "srcTransferId",
-            "type": "bytes32"
-          }
-        ],
-        "internalType": "struct IBridge.WithdrawRequest",
-        "name": "withdrawRequest_",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes[]",
-        "name": "sigs_",
-        "type": "bytes[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "signers_",
-        "type": "address[]"
-      }
-    ],
-    "name": "withdraw",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "dstChainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountIn",
-        "type": "uint256"
-      }
-    ],
-    "name": "estimateFee",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]
