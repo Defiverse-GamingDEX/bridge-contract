@@ -116,7 +116,7 @@ describe("Bridge", function () {
       const _logic = await Bridge.deploy();
       const _proxy = await DFProxy.deploy(_logic.address, proxyAdmin.address);
       bridge = await ethers.getContractAt("Bridge", _proxy.address);
-      await bridge.initialize(oas, feeReceiver.address, minSigner);
+      await bridge.initialize(oas, feeReceiver.address, minSigner, deployer.address);
 
       await bridge.setCBridge(cbridge.address);
       await bridge.setVerseBridge(

@@ -6,9 +6,9 @@ async function main() {
 
   const DFProxyAdmin_expectedAddress =
     "0x48D9D629aC7Ba6c8b6c097A126c7E80c9E33fdD3";
-  const Bridge_expectedAddress = "0xa67d27c4253DF50ff152166Fc8257b1e40b226c2";
+  const Bridge_expectedAddress = "0xABAf32fafaD65B5e6FDB23A6f0D00fED6F78C1C8";
   const BridgeProxy_expectedAddress =
-    "0xBAC3dcc1519e06c5E92112F0462719E32Cc03C75";
+    "0x182663E7E9bDac92E373D660Ea47ddd91518773a";
 
   // Initialize args
   const oas_ = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000";
