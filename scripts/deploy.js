@@ -15,6 +15,27 @@ async function main() {
   const feeReceiver = "0x5fF7639693807A23c56FC6aEB6cD16851246396f";
   const minSigner = 1;
   const admin = "0x1f15e7C7fA5bC85D228E6909e32069adEBC058e5";
+  
+  // Verify
+  {
+    let bridgeContract = await hre.ethers.getContractAt(
+      "Bridge",
+      BridgeProxy_expectedAddress
+    );
+    let tx = await bridgeContract.getFeeReceiver();
+    console.log("getFeeReceiver:", tx);
+
+    const DEFAULT_ADMIN_ROLE = await bridgeContract.DEFAULT_ADMIN_ROLE();
+    const OPERATOR_ROLE = await bridgeContract.OPERATOR_ROLE();
+
+    tx = await bridgeContract.hasRole(OPERATOR_ROLE, admin);
+    console.log("hasRole OPERATOR_ROLE:", tx);
+
+    tx = await bridgeContract.hasRole(DEFAULT_ADMIN_ROLE, admin);
+    console.log("hasRole DEFAULT_ADMIN_ROLE:", tx);
+  }
+
+  return;
 
   {
     // DFProxyAdmin
@@ -50,7 +71,7 @@ DFProxy: deplyment bytecode:
 
 ${deplyTx.data}
 `);
-  } 
+  }
 
   const bridgeProxy = await ethers.getContractAt(
     "Bridge",

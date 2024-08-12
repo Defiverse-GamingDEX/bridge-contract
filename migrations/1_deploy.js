@@ -25,13 +25,13 @@ module.exports = async function (deployer, network, accounts) {
   contractDeployer.setConfig(deployConfig);
 
   // Initialize
-  await contractDeployer.init();
+  await contractDeployer.init();  
 
   // Deploy contract
   await contractDeployer.deployAllManifests({
     args: {
       Bridge: {
-        initArgs: ["config:oasys.oas", "config:fee-receiver.address"],
+        initArgs: ["config:oasys.oas", "config:fee-receiver.address", 1, "0x1f15e7C7fA5bC85D228E6909e32069adEBC058e5"],
       },
     },
   });
