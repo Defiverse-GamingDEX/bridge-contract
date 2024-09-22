@@ -32,6 +32,8 @@
             "0xa34a85ecb19c88d4965EcAfB10019E63050a1098"
         ],
         "cbridge.address": "0x5200000000000000000000000000000000000015",
+        "cbridge.peggedTokenBridgeV2.address": "0x5200000000000000000000000000000000000017",
+        "cbridge.originalTokenVault.address": "0xAbFFc70d4434D374c85B10860A8Be1851c0b838c",        
         "min-signer": "1",
         "signers": [
             "0x6E1728C7B8E7fc300D4EA023a98f4D6337822323",

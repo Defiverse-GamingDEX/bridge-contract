@@ -10,6 +10,8 @@ import "./interface/IBridge.sol";
 import "./interface/ICBridge.sol";
 import "./interface/IL1StandardBridge.sol";
 import "./interface/IL2StandardERC20.sol";
+import "./interface/IOriginalTokenVaultV2.sol";
+import "./interface/IPeggedTokenBridgeV2.sol";
 
 contract Bridge is
     IBridge,
@@ -36,6 +38,9 @@ contract Bridge is
     mapping(bytes32 => bool) private _transfers;
 
     address private _feeReceiver;
+
+    IPeggedTokenBridgeV2 public peggedTokenBridge;
+    IOriginalTokenVaultV2 public originalTokenVault;
 
     modifier onlyAdmin() {
         require(
@@ -119,6 +124,26 @@ contract Bridge is
         address signer
     ) external view override returns (bool) {
         return hasRole(SIGNER_ROLE, signer);
+    }
+
+    function setPeggedTokenBridge(
+        address _peggedTokenBridge
+    ) external onlyAdmin {
+        require(
+            _peggedTokenBridge != address(0),
+            "Bridge: invalid _originalTokenVault"
+        );
+        peggedTokenBridge = IPeggedTokenBridgeV2(_peggedTokenBridge);
+    }
+
+    function setOriginalTokenVault(
+        address _originalTokenVault
+    ) external onlyAdmin {
+        require(
+            _originalTokenVault != address(0),
+            "Bridge: invalid _originalTokenVault"
+        );
+        originalTokenVault = IOriginalTokenVaultV2(_originalTokenVault);
     }
 
     function setFeeReceiver(address addr) external override onlyAdmin {
@@ -330,6 +355,145 @@ contract Bridge is
         }
 
         emit Relay(
+            transferId,
+            relayRequest_.receiver,
+            relayRequest_.token,
+            relayRequest_.fee,
+            relayRequest_.amount,
+            relayRequest_.nativeTokenAmount,
+            relayRequest_.srcTransferId
+        );
+    }
+
+    /*
+        # Pegged Token Bridge
+
+        Goal: Token T exists on chain A but not on chain B, and we would like to support a 1:1 pegged token T' on chain B.
+
+        Approach: Deploy a PeggedToken ([example](./tokens/MultiBridgeToken.sol)) on chain B with zero initial supply, and config SGN (through gov) to mark it as 1:1 pegged to the chain A’s original token. Anyone can lock original token T on chain A’s OriginalTokenVault contract to trigger mint of pegged token T’ on chain B through the PeggedTokenBridge contract accordingly.
+
+        ## Basic workflows
+
+        ### Deposit original token on chain A and mint pegged token on chain B
+
+        1. User calls [deposit](./OriginalTokenVault.sol#L72) on chain A to lock original tokens in chain A’s vault contract.
+        2. SGN generates the [Mint proto msg](../libraries/proto/pegged.proto#L14) cosigned by validators, and call [mint](./PeggedTokenBridge.sol#L55) function on chain B.
+
+        ### Burn pegged token on chain B and withdraw original token on chain A
+
+        1. User calls [burn](./PeggedTokenBridge.sol#L104) on chain B to burn the pegged token.
+        2. SGN generates the [Withdraw proto msg](../libraries/proto/pegged.proto#L34) cosigned by validators, and call [withdraw](./OriginalTokenVault.sol#L131) function on chain A.
+
+        ### Burn pegged token on chain B (PeggedTokenBridgeV2) and mint pegged token on chain C
+
+        1. User calls [burn](./PeggedTokenBridgeV2.sol#L116) on chain B to burn the pegged token, specifying chain C's chainId as `toChainId`.
+        2. SGN generates the [Mint proto msg](../libraries/proto/pegged.proto#L14) cosigned by validators, and call [mint](./PeggedTokenBridge.sol#L55) function on chain C.
+    */
+
+    // Case: Deposit original token on Oasys Hub and mint pegged token on dst chain
+    function relayDepositRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external override onlyOperator whenNotPaused {
+        require(relayRequest_.amount > 0, "Bridge: amount too small");
+        require(
+            address(originalTokenVault) != address(0),
+            "Bridge: originalTokenVault is not set"
+        );
+        bytes32 transferId = _verifyRelayRequest(
+            relayRequest_,
+            sigs_,
+            signers_
+        );
+
+        _transfers[transferId] = true;
+
+        if (relayRequest_.token == OVM_OAS) {
+            originalTokenVault.depositNative(
+                relayRequest_.amount,
+                relayRequest_.dstChainId,
+                relayRequest_.receiver,
+                uint64(uint256(transferId))
+            );
+
+            if (relayRequest_.fee > 0) {
+                (bool success, ) = payable(_feeReceiver).call{
+                    value: relayRequest_.fee
+                }("");
+                require(success, "Bridge: failure to transfer fee");
+            }
+        } else {
+            IERC20(relayRequest_.token).safeIncreaseAllowance(
+                address(originalTokenVault),
+                relayRequest_.amount
+            );
+            originalTokenVault.deposit(
+                relayRequest_.token,
+                relayRequest_.amount,
+                relayRequest_.dstChainId,
+                relayRequest_.receiver,
+                uint64(uint256(transferId))
+            );
+
+            if (relayRequest_.fee > 0) {
+                IERC20(relayRequest_.token).safeTransfer(
+                    _feeReceiver,
+                    relayRequest_.fee
+                );
+            }
+        }
+
+        emit RelayDeposit(
+            transferId,
+            relayRequest_.receiver,
+            relayRequest_.token,
+            relayRequest_.fee,
+            relayRequest_.amount,
+            relayRequest_.nativeTokenAmount,
+            relayRequest_.srcTransferId
+        );
+    }
+
+    // Burn pegged token on Oasys Hub (PeggedTokenBridgeV2) and mint pegged token on dst chain
+    function relayBurnRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external override onlyOperator whenNotPaused {
+        require(relayRequest_.amount > 0, "Bridge: amount too small");
+        require(
+            address(peggedTokenBridge) != address(0),
+            "Bridge: peggedTokenBridge is not set"
+        );
+        bytes32 transferId = _verifyRelayRequest(
+            relayRequest_,
+            sigs_,
+            signers_
+        );
+
+        _transfers[transferId] = true;
+
+        IERC20(relayRequest_.token).safeIncreaseAllowance(
+            address(peggedTokenBridge),
+            relayRequest_.amount
+        );
+        peggedTokenBridge.burn(
+            relayRequest_.token,
+            relayRequest_.amount,
+            relayRequest_.dstChainId,
+            relayRequest_.receiver,
+            uint64(uint256(transferId))
+        );
+
+        if (relayRequest_.fee > 0) {
+            IERC20(relayRequest_.token).safeTransfer(
+                _feeReceiver,
+                relayRequest_.fee
+            );
+        }
+
+        emit RelayBurn(
             transferId,
             relayRequest_.receiver,
             relayRequest_.token,
