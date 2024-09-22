@@ -15,6 +15,7 @@
         }
     },
     "config": {
+        "admin.address": "0x1f15e7C7fA5bC85D228E6909e32069adEBC058e5",
         "fee-receiver.address": "0x5fF7639693807A23c56FC6aEB6cD16851246396f",
         "oasys.oas": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
         "oasys.l2-bridge.address": "0x4200000000000000000000000000000000000010",

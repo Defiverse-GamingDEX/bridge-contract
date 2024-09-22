@@ -51,6 +51,17 @@ module.exports = async function (deployer, network, accounts) {
   // await test(contractDeployer);
 };
 
+const test = async (contractDeployer) => {
+  let contract = await contractDeployer.loadContract("Bridge");
+  let rs = null;
+
+  rs = await contract.getFeeReceiver();
+  console.log("feeReceiver:", rs);
+
+  rs = await contract.getMinSigner();
+  console.log("minSigner:", rs.toString());
+};
+
 const testBridgeVerse = async (contractDeployer) => {
   console.log("== Test bridge verse");
 
