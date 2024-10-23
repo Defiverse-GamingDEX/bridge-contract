@@ -1,22 +1,43 @@
 {
-  "contracts": {
-    "DFProxyAdmin": "",
-    "Bridge": {
-      "proxy": "",
-      "impl": ""
+    "contracts": {
+        "DFProxyAdmin": "0x48D9D629aC7Ba6c8b6c097A126c7E80c9E33fdD3",
+        "Bridge": {
+            "proxy": "0x182663E7E9bDac92E373D660Ea47ddd91518773a",
+            "impl": "0xABAf32fafaD65B5e6FDB23A6f0D00fED6F78C1C8"
+        }
+    },
+    "mapping": {},
+    "roles": {
+        "Bridge": {
+            "OPERATOR_ROLE": [
+                "0xB38c4e794343755D44DaD5290174A9b96E1b61c3"
+            ]
+        }
+    },
+    "config": {
+        "admin.address": "0x1f15e7C7fA5bC85D228E6909e32069adEBC058e5",
+        "fee-receiver.address": "0x5fF7639693807A23c56FC6aEB6cD16851246396f",
+        "oasys.oas": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+        "oasys.l2-bridge.address": "0x4200000000000000000000000000000000000010",
+        "oasys.l1-bridge.id": [
+            16116,
+            19011,
+            29548,
+            2400
+        ],
+        "oasys.l1-bridge.address": [
+            "0x0cc5366BE800cf73daB2DBfDE031C255a6f1E3cC",
+            "0x9245e19eB88de2534E03E764FB2a5f194e6d97AD",
+            "0xA16517A9796bAc73eFA7d07269F9818b7978dc2A",
+            "0xa34a85ecb19c88d4965EcAfB10019E63050a1098"
+        ],
+        "cbridge.address": "0x5200000000000000000000000000000000000015",
+        "cbridge.peggedTokenBridgeV2.address": "0x5200000000000000000000000000000000000017",
+        "cbridge.originalTokenVault.address": "0xAbFFc70d4434D374c85B10860A8Be1851c0b838c",        
+        "min-signer": "1",
+        "signers": [
+            "0x6E1728C7B8E7fc300D4EA023a98f4D6337822323",
+            "0x5C0C1EbE736F5985c5164C5d5d9E6183AD17a020"
+        ]
     }
-  },
-  "mapping": {},
-  "roles": {},
-  "config": {
-    "fee-receiver.address": "",
-    "oasys.oas": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-    "oasys.l2-bridge.address": "0x4200000000000000000000000000000000000010",
-    "oasys.l1-bridge.id": [16116, 19011],
-    "oasys.l1-bridge.address": [
-      "0x0cc5366BE800cf73daB2DBfDE031C255a6f1E3cC",
-      "0x9245e19eB88de2534E03E764FB2a5f194e6d97AD"
-    ],
-    "cbridge.address": "0x5200000000000000000000000000000000000015"
-  }
 }

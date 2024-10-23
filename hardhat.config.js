@@ -35,6 +35,21 @@ module.exports = {
     hardhat: {
       gasPrice: 875000000,
     },
+    oasys: {
+      // gasPrice: 110000000000,
+      url: "https://rpc.mainnet.oasys.games",
+      accounts: [process.env.DEPLOY_PRIVATE_KEY_MAINNET],
+    },
+    oasys_testnet: {
+      // gasPrice: 110000000000,
+      url: "https://rpc.testnet.oasys.games",
+      accounts: [process.env.DEPLOY_PRIVATE_KEY_MAINNET],
+    },
+    defiverse: {
+      gasPrice: 110000000000,
+      url: "https://rpc.defi-verse.org/",
+      accounts: [process.env.DEPLOY_PRIVATE_KEY_MAINNET],
+    },
   },
   gasReporter: {
     enabled: true,

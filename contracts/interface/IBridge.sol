@@ -29,6 +29,26 @@ interface IBridge {
         bytes32 srcTransferId
     );
 
+    event RelayDeposit(
+        bytes32 transferId,
+        address receiver,
+        address token,
+        uint256 fee,
+        uint256 amount,
+        uint256 nativeTokenAmount,
+        bytes32 srcTransferId
+    );
+
+    event RelayBurn(
+        bytes32 transferId,
+        address receiver,
+        address token,
+        uint256 fee,
+        uint256 amount,
+        uint256 nativeTokenAmount,
+        bytes32 srcTransferId
+    );
+
     function addSigner(address signer) external;
 
     function revokeSigner(address signer) external;
@@ -52,6 +72,18 @@ interface IBridge {
     function pause() external;
 
     function unpause() external;
+
+    function relayDepositRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external;
+
+    function relayBurnRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external;
 
     function relayExternalRequest(
         RelayRequest calldata relayRequest_,
