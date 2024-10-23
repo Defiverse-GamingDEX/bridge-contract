@@ -4,20 +4,20 @@ const { ethers } = hre;
 async function main() {
   console.log("== Deploy start");
 
-  const DFProxyAdmin_expectedAddress =
-    "0x48D9D629aC7Ba6c8b6c097A126c7E80c9E33fdD3";
-  const Bridge_expectedAddress = "0xABAf32fafaD65B5e6FDB23A6f0D00fED6F78C1C8";
-  const BridgeProxy_expectedAddress =
-    "0x182663E7E9bDac92E373D660Ea47ddd91518773a";
+  const isVerify = false;
+
+  const DFProxyAdmin_expectedAddress = "0xC3a17A80f429693F40e756c299C4033a7EF31f42";
+  const Bridge_expectedAddress = "0xDDfa498B9f01912148B2FeAfBEeA044a91B3f98a";
+  const BridgeProxy_expectedAddress = "0x323D29986BCA00AEF8C2cb0f93e6F55F18eb3E67";
 
   // Initialize args
   const oas_ = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000";
   const feeReceiver = "0x5fF7639693807A23c56FC6aEB6cD16851246396f";
   const minSigner = 1;
   const admin = "0x1f15e7C7fA5bC85D228E6909e32069adEBC058e5";
-  
+
   // Verify
-  {
+  if (isVerify) {
     let bridgeContract = await hre.ethers.getContractAt(
       "Bridge",
       BridgeProxy_expectedAddress
@@ -33,9 +33,9 @@ async function main() {
 
     tx = await bridgeContract.hasRole(DEFAULT_ADMIN_ROLE, admin);
     console.log("hasRole DEFAULT_ADMIN_ROLE:", tx);
-  }
 
-  return;
+    return;
+  }
 
   {
     // DFProxyAdmin
@@ -89,18 +89,6 @@ initialize calldata:
 
 ${call.data}
 `);
-
-  // let rs = await bridgeProxy.getMinSigner();
-  // console.log("== getMinSigner:", rs);
-
-  // const adminRole = await bridgeProxy.DEFAULT_ADMIN_ROLE();
-  // // const adminRole = await bridgeProxy.DEFAULT_ADMIN_ROLE();
-
-  // const hasRole = await bridgeProxy.hasRole(adminRole, "0x68C297EDdd953961E81532202e48b048e459c7c3");
-  // console.log("== hasRole:", hasRole);
-
-  // const getRoleMember = await bridgeProxy.getRoleMember(adminRole, 0);
-  // console.log("== getRoleMember:", getRoleMember);
 
   console.log("== Deploy done");
 }

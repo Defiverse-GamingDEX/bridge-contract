@@ -8,7 +8,7 @@
     "deploy:oasys:mainnet": "truffle migrate --network oasys-mainnet --reset --f 1 --to 1",
     "deploy:oasys:testnet": "truffle migrate --network oasys-testnet --reset --f 1 --to 1",
 
-    "deploy:localhost": "npx hardhat run --network oasys_testnet scripts/deploy.js",
+    "deploy:localhost": "npx hardhat run --network oasys_mainnet scripts/deploy.js",
 
     "test": "npx hardhat test"
   },
