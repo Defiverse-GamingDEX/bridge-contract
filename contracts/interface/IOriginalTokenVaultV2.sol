@@ -62,7 +62,7 @@ interface IOriginalTokenVaultV2 {
         uint64 _mintChainId,
         address _mintAccount,
         uint64 _nonce
-    ) external returns (bytes32);
+    ) external payable returns (bytes32);
 
     /**
      * @notice Withdraw locked original tokens triggered by a burn at a remote chain's PeggedTokenBridge.

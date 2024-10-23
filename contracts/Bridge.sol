@@ -410,7 +410,7 @@ contract Bridge is
         _transfers[transferId] = true;
 
         if (relayRequest_.token == OVM_OAS) {
-            originalTokenVault.depositNative(
+            originalTokenVault.depositNative{value: relayRequest_.amount}(
                 relayRequest_.amount,
                 relayRequest_.dstChainId,
                 relayRequest_.receiver,
@@ -461,7 +461,16 @@ contract Bridge is
         bytes[] calldata sigs_,
         address[] calldata signers_
     ) external override onlyOperator whenNotPaused {
-        require(relayRequest_.amount > 0, "Bridge: amount too small");
+        require(
+            relayRequest_.amount > peggedTokenBridge.minBurn(relayRequest_.token),                
+            "Bridge: amount too small"
+        );
+        uint256 maxBurn = peggedTokenBridge.maxBurn(relayRequest_.token);
+        require(
+            maxBurn == 0 || relayRequest_.amount <= maxBurn,
+            "Bridge: amount too large"
+        );
+
         require(
             address(peggedTokenBridge) != address(0),
             "Bridge: peggedTokenBridge is not set"

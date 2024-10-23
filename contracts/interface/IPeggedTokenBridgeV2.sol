@@ -74,4 +74,7 @@ interface IPeggedTokenBridgeV2 {
     ) external returns (bytes32);
 
     function executeDelayedTransfer(bytes32 id) external;
+
+    function minBurn(address token) external view returns (uint256);
+    function maxBurn(address token) external view returns (uint256);
 }
