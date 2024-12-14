@@ -462,15 +462,71 @@ contract Bridge is
         address[] calldata signers_
     ) external override onlyOperator whenNotPaused {
         require(
-            relayRequest_.amount > peggedTokenBridge.minBurn(relayRequest_.token),                
-            "Bridge: amount too small"
+            address(peggedTokenBridge) != address(0),
+            "Bridge: peggedTokenBridge is not set"
         );
-        uint256 maxBurn = peggedTokenBridge.maxBurn(relayRequest_.token);
-        require(
-            maxBurn == 0 || relayRequest_.amount <= maxBurn,
-            "Bridge: amount too large"
+        bytes32 transferId = _verifyRelayRequest(
+            relayRequest_,
+            sigs_,
+            signers_
         );
 
+        _transfers[transferId] = true;
+
+        if (relayRequest_.l2Token == address(0)) {
+            IERC20(relayRequest_.token).safeIncreaseAllowance(
+                address(peggedTokenBridge),
+                relayRequest_.amount
+            );
+        } else {
+            // relayRequest_.token = Intermediary original token
+            // relayRequest_.l2Token = Canonical token
+
+            IERC20(relayRequest_.l2Token).safeIncreaseAllowance(
+                relayRequest_.token,
+                relayRequest_.amount
+            );
+        }
+
+        peggedTokenBridge.burn(
+            relayRequest_.token,
+            relayRequest_.amount,
+            relayRequest_.dstChainId,
+            relayRequest_.receiver,
+            uint64(uint256(transferId))
+        );
+
+        if (relayRequest_.fee > 0) {
+            if (relayRequest_.l2Token == address(0)) {
+                IERC20(relayRequest_.token).safeTransfer(
+                    _feeReceiver,
+                    relayRequest_.fee
+                );
+            } else {
+                IERC20(relayRequest_.l2Token).safeTransfer(
+                    _feeReceiver,
+                    relayRequest_.fee
+                );
+            }
+        }
+
+        emit RelayBurn(
+            transferId,
+            relayRequest_.receiver,
+            relayRequest_.token,
+            relayRequest_.fee,
+            relayRequest_.amount,
+            relayRequest_.nativeTokenAmount,
+            relayRequest_.srcTransferId
+        );
+    }
+
+    // Burn pegged token on Oasys Hub (PeggedTokenBridgeV2) and mint pegged token on dst chain
+    function relayBurnFromRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external override onlyOperator whenNotPaused {
         require(
             address(peggedTokenBridge) != address(0),
             "Bridge: peggedTokenBridge is not set"
@@ -483,11 +539,22 @@ contract Bridge is
 
         _transfers[transferId] = true;
 
-        IERC20(relayRequest_.token).safeIncreaseAllowance(
-            address(peggedTokenBridge),
-            relayRequest_.amount
-        );
-        peggedTokenBridge.burn(
+        if (relayRequest_.l2Token == address(0)) {
+            IERC20(relayRequest_.token).safeIncreaseAllowance(
+                address(peggedTokenBridge),
+                relayRequest_.amount
+            );
+        } else {
+            // relayRequest_.token = Intermediary original token
+            // relayRequest_.l2Token = Canonical token
+
+            IERC20(relayRequest_.l2Token).safeIncreaseAllowance(
+                relayRequest_.token,
+                relayRequest_.amount
+            );
+        }
+
+        peggedTokenBridge.burnFrom(
             relayRequest_.token,
             relayRequest_.amount,
             relayRequest_.dstChainId,
@@ -496,10 +563,17 @@ contract Bridge is
         );
 
         if (relayRequest_.fee > 0) {
-            IERC20(relayRequest_.token).safeTransfer(
-                _feeReceiver,
-                relayRequest_.fee
-            );
+            if (relayRequest_.l2Token == address(0)) {
+                IERC20(relayRequest_.token).safeTransfer(
+                    _feeReceiver,
+                    relayRequest_.fee
+                );
+            } else {
+                IERC20(relayRequest_.l2Token).safeTransfer(
+                    _feeReceiver,
+                    relayRequest_.fee
+                );
+            }
         }
 
         emit RelayBurn(

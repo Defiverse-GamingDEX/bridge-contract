@@ -87,8 +87,8 @@ const testBridgeVerse = async (contractDeployer) => {
 const config = async (contractDeployer) => {
   console.log("\n== config start ==");
 
-  const setupCBridge = false;
-  const setupVerseBridge = false;
+  const setupCBridge = true;
+  const setupVerseBridge = true;
 
   let contract = await contractDeployer.loadContract("Bridge");
 
@@ -124,13 +124,28 @@ const config = async (contractDeployer) => {
   // set cBridge
   if (setupCBridge) {
     console.log("");
+    let rs = null;
 
     const newCBridge = await contractDeployer.formatValue(
       "config:cbridge.address"
     );
     console.log("setCBridge:", newCBridge);
-    const rs = await contract.setCBridge(newCBridge);
-    console.log("setCBridge tx:", rs.tx);
+    rs = await contract.setCBridge(newCBridge);
+    console.log("\ttx:", rs.tx);
+
+    const newOriginalTokenVault = await contractDeployer.formatValue(
+      "config:cbridge.originalTokenVault.address"
+    );
+    console.log("setOriginalTokenVault:", newOriginalTokenVault);
+    rs = await contract.setOriginalTokenVault(newOriginalTokenVault);
+    console.log("\ttx:", rs.tx);
+
+    const newPeggedTokenBridge = await contractDeployer.formatValue(
+      "config:cbridge.peggedTokenBridgeV2.address"
+    );
+    console.log("setPeggedTokenBridge:", newPeggedTokenBridge);
+    rs = await contract.setPeggedTokenBridge(newPeggedTokenBridge);
+    console.log("\ttx:", rs.tx);
   }
 
   // set Verse Bridge

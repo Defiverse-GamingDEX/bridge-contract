@@ -1056,5 +1056,75 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "receiver",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "l2Token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nativeTokenAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "dstChainId",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "srcTransferId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct IBridge.RelayRequest",
+        "name": "relayRequest_",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "sigs_",
+        "type": "bytes[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "signers_",
+        "type": "address[]"
+      }
+    ],
+    "name": "relayBurnFromRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]

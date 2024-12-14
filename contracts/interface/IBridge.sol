@@ -85,6 +85,12 @@ interface IBridge {
         address[] calldata signers_
     ) external;
 
+    function relayBurnFromRequest(
+        RelayRequest calldata relayRequest_,
+        bytes[] calldata sigs_,
+        address[] calldata signers_
+    ) external;
+
     function relayExternalRequest(
         RelayRequest calldata relayRequest_,
         uint32 maxSlippage_,

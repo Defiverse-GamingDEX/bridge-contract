@@ -1,9 +1,9 @@
 {
     "contracts": {
-        "DFProxyAdmin": "0xC3a17A80f429693F40e756c299C4033a7EF31f42",
+        "DFProxyAdmin": "0x48D9D629aC7Ba6c8b6c097A126c7E80c9E33fdD3",
         "Bridge": {
-            "proxy": "0x323D29986BCA00AEF8C2cb0f93e6F55F18eb3E67",
-            "impl": "0xDDfa498B9f01912148B2FeAfBEeA044a91B3f98a"
+            "proxy": "0x182663E7E9bDac92E373D660Ea47ddd91518773a",
+            "impl": "0xABAf32fafaD65B5e6FDB23A6f0D00fED6F78C1C8"
         }
     },
     "mapping": {},
@@ -33,7 +33,7 @@
         ],
         "cbridge.address": "0x5200000000000000000000000000000000000015",
         "cbridge.peggedTokenBridgeV2.address": "0x5200000000000000000000000000000000000017",
-        "cbridge.originalTokenVault.address": "0xAbFFc70d4434D374c85B10860A8Be1851c0b838c",
+        "cbridge.originalTokenVault.address": "0xAbFFc70d4434D374c85B10860A8Be1851c0b838c",        
         "min-signer": "1",
         "signers": [
             "0x6E1728C7B8E7fc300D4EA023a98f4D6337822323",
