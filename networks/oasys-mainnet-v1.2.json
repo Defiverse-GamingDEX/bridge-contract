@@ -1,9 +1,9 @@
 {
     "contracts": {
-        "DFProxyAdmin": "0x045D4e02eA10e6A66be119804E1CD4A28f4823F0",
+        "DFProxyAdmin": "0xC3a17A80f429693F40e756c299C4033a7EF31f42",
         "Bridge": {
-            "proxy": "0x57946c046CFb51cE30586b54Dd150ca32fB7c012",
-            "impl": "0x37bEF22D4f8aE01929965B815f4141DE74430a47"
+            "proxy": "0x323D29986BCA00AEF8C2cb0f93e6F55F18eb3E67",
+            "impl": "0xDDfa498B9f01912148B2FeAfBEeA044a91B3f98a"
         }
     },
     "mapping": {},
